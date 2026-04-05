@@ -1,0 +1,95 @@
+[[dishes]]
+name = "Tacos Dorados"
+
+[[dishes.ingredients]]
+name = "Torilla"
+category = "Misc"
+frozen = false
+
+[[dishes.ingredients]]
+name = "Riven Ost"
+category = "Misc"
+frozen = false
+
+[[dishes.ingredients]]
+name = "Olja"
+category = "Misc"
+frozen = false
+
+[[dishes]]
+name = "Pannkakor"
+
+[[dishes.ingredients]]
+name = "Ägg"
+category = "Misc"
+frozen = false
+
+[[dishes.ingredients]]
+name = "Mjöl"
+category = "Misc"
+frozen = false
+
+[[dishes.ingredients]]
+name = "Mjölk"
+category = "Misc"
+frozen = false
+
+[[dishes.ingredients]]
+name = "Smör"
+category = "Misc"
+frozen = false
+
+[[dishes]]
+name = "Havregrynsgröt"
+
+[[dishes.ingredients]]
+name = "Havregryn"
+category = "Misc"
+frozen = false
+
+[[dishes.ingredients]]
+name = "Lingonsylt"
+category = "Misc"
+frozen = false
+
+[[dishes.ingredients]]
+name = "Salt"
+category = "Misc"
+frozen = false
+
+[[dishes]]
+name = "Pyttipanna"
+
+[[dishes.ingredients]]
+name = "Potatis"
+category = "Misc"
+frozen = false
+
+[[dishes.ingredients]]
+name = "Chorizo"
+category = "Misc"
+frozen = false
+
+[[dishes.ingredients]]
+name = "Hallomi"
+category = "Misc"
+frozen = false
+
+[[dishes.ingredients]]
+name = "Rödbetor"
+category = "Misc"
+frozen = false
+
+[[dishes.ingredients]]
+name = "Inlagd Gruka"
+category = "Misc"
+frozen = false
+
+[[dishes.ingredients]]
+name = "Lök"
+category = "Misc"
+frozen = false
+
+[[dishes]]
+name = "Test"
+ingredients = []

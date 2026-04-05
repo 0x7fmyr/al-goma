@@ -1,0 +1,124 @@
+use crossterm::ExecutableCommand;
+use crossterm::terminal::{
+    EnterAlternateScreen, LeaveAlternateScreen, disable_raw_mode, enable_raw_mode,
+};
+
+use crossterm::event::{self, Event, KeyCode, KeyEvent, KeyModifiers};
+use ratatui::Terminal;
+use ratatui::layout::{Constraint, Direction, Layout, Margin};
+use ratatui::style::Color;
+use ratatui::style::Style;
+use ratatui::widgets::{Block, BorderType::Rounded, Borders, Paragraph};
+
+use ratatui::prelude::CrosstermBackend;
+
+use std::error::Error;
+use std::io::stdout;
+
+mod app;
+mod db;
+mod items;
+mod render;
+mod ui;
+//claude --resume ce8bf707-c036-400b-a940-359d721e90bc
+fn main() -> Result<(), Box<dyn Error>> {
+    //set up
+    enable_raw_mode()?;
+    std::io::stdout().execute(EnterAlternateScreen)?;
+    let backend = CrosstermBackend::new(stdout());
+    let mut terminal = Terminal::new(backend)?;
+
+    let mut app = app::App::init();
+    let result = run(&mut terminal, &mut app);
+
+    //clean up
+    disable_raw_mode()?;
+    std::io::stdout().execute(LeaveAlternateScreen)?;
+    result
+}
+
+fn run(
+    terminal: &mut Terminal<CrosstermBackend<std::io::Stdout>>,
+    app: &mut app::App,
+) -> Result<(), Box<dyn Error>> {
+    loop {
+        terminal.draw(|window| {
+            let edge_w = Layout::default()
+                .direction(Direction::Vertical)
+                .constraints([
+                    Constraint::Length(1),
+                    Constraint::Fill(1),
+                    Constraint::Length(1),
+                ])
+                .split(window.area());
+
+            let edge_w = Layout::default()
+                .direction(Direction::Horizontal)
+                .constraints([
+                    Constraint::Length(2),
+                    Constraint::Fill(1), // main window
+                    Constraint::Length(2),
+                ])
+                .split(edge_w[1]);
+
+            let chunks = Layout::default()
+                .direction(Direction::Horizontal)
+                .constraints([
+                    Constraint::Length(25),
+                    Constraint::Length(2),
+                    Constraint::Fill(1),
+                ])
+                .split(edge_w[1].inner(Margin {
+                    horizontal: 3,
+                    vertical: 2,
+                }));
+
+            // MAIN WINDOW
+            window.render_widget(
+                Paragraph::default().block(
+                    Block::bordered()
+                        .border_style(Style::default().fg(Color::Blue))
+                        .border_type(Rounded)
+                        .borders(Borders::ALL),
+                ),
+                edge_w[1],
+            );
+
+            render::render_main_left(window, chunks[0], app);
+
+            render::render_main_right(window, chunks[2], app);
+        })?;
+        if event::poll(std::time::Duration::from_millis(16))? {
+            if let Event::Key(key) = event::read()? {
+                match key {
+                    //mod presses
+                    KeyEvent {
+                        code: KeyCode::Char('s'),
+                        modifiers: KeyModifiers::CONTROL,
+                        ..
+                    } => app.push_dish_to_db(),
+                    //plain keypresses
+                    KeyEvent { code, .. } => match code {
+                        KeyCode::Char('q') => {
+                            break;
+                        }
+                        KeyCode::Esc => app.handle_esc(),
+                        KeyCode::Down => app.move_cursor_down(),
+                        KeyCode::Up => app.move_cursor_up(),
+                        KeyCode::Left => app.move_focus_left(),
+                        KeyCode::Right => app.move_focus_right(),
+
+                        KeyCode::Char(c) => app.keyboard_input(c),
+                        KeyCode::Backspace => app.backspace(),
+                        KeyCode::Delete => app.handle_delete(),
+
+                        KeyCode::Enter => app.handle_enter(),
+
+                        _ => {}
+                    },
+                }
+            }
+        }
+    }
+    Ok(())
+}
