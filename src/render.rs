@@ -8,8 +8,8 @@ use ratatui::widgets::Clear;
 use ratatui::widgets::{Block, BorderType::Rounded, Borders, Paragraph};
 use ratatui::{Frame, layout::Rect};
 
-use crate::app::{self, AppState, Space};
-use crate::items::Dish;
+use crate::app::{self, App, AppState, Space};
+use crate::{items, ui};
 
 pub fn render_main_left(window: &mut Frame, rect: Rect, app: &mut app::App) {
     window.render_widget(
@@ -56,6 +56,10 @@ pub fn render_main_left(window: &mut Frame, rect: Rect, app: &mut app::App) {
 
 pub fn render_main_right(window: &mut Frame, rect: Rect, app: &mut app::App) {
     let mut tooltip = String::from("");
+    let mut prev_state = AppState::Normal;
+    if let Some(state) = app.prev_state {
+        prev_state = state
+    }
 
     match app.state {
         AppState::EnteringDishName | AppState::EnteringIngredients => {
@@ -64,12 +68,15 @@ pub fn render_main_right(window: &mut Frame, rect: Rect, app: &mut app::App) {
         AppState::ViewingDatabase => {
             tooltip = "[up/down] select   [enter] edit   [esc] cancel".to_string();
         }
-        AppState::EditingItem => {
+        AppState::EditingDish => {
             tooltip =
-                "[up/down] select   [enter] edit   [ctrl+n] edit name   [esc] cancel".to_string();
+                "[up/down] select  [enter] edit  [ctrl+n] edit name  [ctrl+a] add  [ctrl+k] change category  [del] remove  [esc] cancel".to_string();
         }
-        AppState::EditingIngredient => {
+        AppState::EditingIngredient | AppState::EditingDishName => {
             tooltip = "[enter] confirm   [esc] cancel".to_string();
+        }
+        AppState::PickingCategory | AppState::AreYouSureDelDish => {
+            tooltip = "[up/down] select   [enter] confirm   [esc] cancel".to_string();
         }
         _ => {}
     }
@@ -85,6 +92,8 @@ pub fn render_main_right(window: &mut Frame, rect: Rect, app: &mut app::App) {
 
     if matches!(app.state, AppState::EnteringDishName)
         || matches!(app.state, AppState::EnteringIngredients)
+        || (matches!(app.state, AppState::PickingCategory)
+            && prev_state == AppState::EnteringIngredients)
     {
         let list_window = Layout::default()
             .direction(Direction::Vertical)
@@ -132,6 +141,44 @@ pub fn render_main_right(window: &mut Frame, rect: Rect, app: &mut app::App) {
                 list_window[1],
             );
         }
+        if matches!(app.state, AppState::PickingCategory) {
+            let mut input_w: u16 = 38;
+            let mut input_h: u16 = 14;
+            let center_y: u16;
+            let center_x: u16;
+
+            if rect.height >= 40 || rect.width >= 40 {
+                center_y = rect.y + (rect.height / 2) - (input_h / 2);
+                center_x = rect.x + (rect.width / 2) - (input_w / 2);
+            } else {
+                center_y = 0;
+                center_x = 0;
+                input_h = 0;
+                input_w = 0;
+            }
+
+            window.render_widget(
+                Clear,
+                Rect {
+                    x: center_x,
+                    y: center_y,
+                    width: input_w,
+                    height: input_h,
+                },
+            );
+
+            render_pick_category(
+                window,
+                Rect {
+                    x: center_x,
+                    y: center_y,
+                    width: input_w,
+                    height: input_h,
+                },
+                app,
+                prev_state,
+            );
+        }
     }
 
     let input_w: u16 = rect.width / 2 + rect.width / 3;
@@ -146,13 +193,20 @@ pub fn render_main_right(window: &mut Frame, rect: Rect, app: &mut app::App) {
     }
 
     if matches!(app.state, AppState::ViewingDatabase)
-        || matches!(app.state, AppState::EditingItem)
+        || matches!(app.state, AppState::EditingDish)
         || matches!(app.state, AppState::EditingIngredient)
+        || matches!(app.state, AppState::EditingDishName)
+        || matches!(app.state, AppState::AreYouSureDelDish)
+        || matches!(app.state, AppState::EditingAddIngredient)
+        || (matches!(app.state, AppState::PickingCategory) && prev_state == AppState::EditingDish)
     {
         render_dish_database(window, rect, app);
 
-        if matches!(app.state, AppState::EditingItem)
+        if matches!(app.state, AppState::EditingDish)
             || matches!(app.state, AppState::EditingIngredient)
+            || matches!(app.state, AppState::EditingDishName)
+            || matches!(app.state, AppState::EditingAddIngredient)
+            || matches!(app.state, AppState::PickingCategory)
         {
             let input_w: u16 = rect.width / 3;
             let input_h: u16 = (rect.height * 4) / 6;
@@ -185,10 +239,89 @@ pub fn render_main_right(window: &mut Frame, rect: Rect, app: &mut app::App) {
                 },
                 app,
             );
+
+            if matches!(app.state, AppState::PickingCategory) {
+                let mut input_w: u16 = 38;
+                let mut input_h: u16 = 14;
+                let center_y: u16;
+                let center_x: u16;
+
+                if rect.height >= 40 || rect.width >= 40 {
+                    center_y = rect.y + (rect.height / 2) - (input_h / 2);
+                    center_x = rect.x + (rect.width / 2) - (input_w / 2);
+                } else {
+                    center_y = 0;
+                    center_x = 0;
+                    input_h = 0;
+                    input_w = 0;
+                }
+
+                window.render_widget(
+                    Clear,
+                    Rect {
+                        x: center_x,
+                        y: center_y,
+                        width: input_w,
+                        height: input_h,
+                    },
+                );
+
+                render_pick_category(
+                    window,
+                    Rect {
+                        x: center_x,
+                        y: center_y,
+                        width: input_w,
+                        height: input_h,
+                    },
+                    app,
+                    prev_state,
+                );
+            }
+        }
+
+        if matches!(app.state, AppState::AreYouSureDelDish) {
+            let mut input_w: u16 = 50;
+            let mut input_h: u16 = 11;
+            let center_y: u16;
+            let center_x: u16;
+
+            if rect.height >= 40 || rect.width >= 40 {
+                center_y = rect.y + (rect.height / 2) - (input_h / 2);
+                center_x = rect.x + (rect.width / 2) - (input_w / 2);
+            } else {
+                center_y = 0;
+                center_x = 0;
+                input_h = 0;
+                input_w = 0;
+            }
+
+            window.render_widget(
+                Clear,
+                Rect {
+                    x: center_x,
+                    y: center_y,
+                    width: input_w,
+                    height: input_h,
+                },
+            );
+
+            render_yus_del_dish(
+                window,
+                Rect {
+                    x: center_x,
+                    y: center_y,
+                    width: input_w,
+                    height: input_h,
+                },
+                app,
+            );
         }
     }
 
-    if matches!(app.state, AppState::EnteringDishName) {
+    if matches!(app.state, AppState::EnteringDishName)
+        || matches!(app.state, AppState::EditingDishName)
+    {
         window.render_widget(
             Clear,
             Rect {
@@ -213,6 +346,7 @@ pub fn render_main_right(window: &mut Frame, rect: Rect, app: &mut app::App) {
 
     if matches!(app.state, AppState::EnteringIngredients)
         || matches!(app.state, AppState::EditingIngredient)
+        || matches!(app.state, AppState::EditingAddIngredient)
     {
         window.render_widget(
             Clear,
@@ -236,6 +370,179 @@ pub fn render_main_right(window: &mut Frame, rect: Rect, app: &mut app::App) {
         );
     }
 }
+fn render_yus_del_dish(window: &mut Frame, rect: Rect, app: &mut app::App) {
+    let deleting_name = String::from(app.db.dishes[app.db_cursor].name.clone());
+
+    let del_window = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints([
+            Constraint::Length(2),
+            Constraint::Length(4),
+            Constraint::Fill(1),
+        ])
+        .split(rect.inner(Margin {
+            horizontal: 5,
+            vertical: 1,
+        }));
+
+    let buttons = Layout::default()
+        .direction(Direction::Horizontal)
+        .constraints([
+            Constraint::Fill(1),
+            Constraint::Length(6),
+            Constraint::Fill(1),
+        ])
+        .split(del_window[2]);
+
+    let msg = vec![
+        Line::from(format!("Deleting: {}", deleting_name)),
+        Line::from(""),
+        Line::from("Are You Sure?"),
+    ];
+
+    window.render_widget(
+        Paragraph::new(msg).alignment(Alignment::Center),
+        del_window[1],
+    );
+
+    let mut yes = Line::from("Yes");
+    let mut no = Line::from("No");
+
+    if app.del_cursor == 0 {
+        yes = Line::from(Span::styled(
+            "Yes",
+            Style::new().fg(Color::Red).add_modifier(Modifier::BOLD),
+        ));
+    } else {
+        no = Line::from(Span::styled(
+            "No",
+            Style::new().fg(Color::Red).add_modifier(Modifier::BOLD),
+        ));
+    }
+
+    window.render_widget(
+        Paragraph::new(yes).alignment(Alignment::Center).block(
+            Block::bordered()
+                .border_style(Style::default().fg(Color::Red))
+                .border_type(Rounded)
+                .borders(Borders::ALL)
+                .title_alignment(Alignment::Center),
+        ),
+        buttons[0],
+    );
+
+    window.render_widget(
+        Paragraph::new(no).alignment(Alignment::Center).block(
+            Block::bordered()
+                .border_style(Style::default().fg(Color::LightRed))
+                .border_type(Rounded)
+                .borders(Borders::ALL)
+                .title_alignment(Alignment::Center),
+        ),
+        buttons[2],
+    );
+
+    window.render_widget(
+        Paragraph::default().alignment(Alignment::Left).block(
+            Block::bordered()
+                .border_style(Style::default().fg(Color::Red))
+                .border_type(Rounded)
+                .borders(Borders::ALL)
+                .title_alignment(Alignment::Center),
+        ),
+        rect,
+    );
+}
+
+fn render_pick_category(window: &mut Frame, rect: Rect, app: &mut app::App, s: AppState) {
+    let pick_window = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints([Constraint::Length(4), Constraint::Fill(1)])
+        .split(rect.inner(Margin {
+            horizontal: 5,
+            vertical: 1,
+        }));
+
+    let i = app
+        .pending_dish
+        .as_ref()
+        .unwrap()
+        .ingredients
+        .last()
+        .unwrap()
+        .name
+        .clone();
+
+    if s == AppState::EnteringIngredients {
+        let msg = vec![
+            Line::from("I can't find a category for:"),
+            Line::from(app::uppercase_words(&i)).add_modifier(Modifier::BOLD),
+            Line::from("Please choose one:"),
+        ];
+        window.render_widget(
+            Paragraph::new(msg).alignment(Alignment::Center),
+            pick_window[0],
+        );
+    }
+    if s == AppState::EditingDish {
+        let msg = vec![
+            Line::from("Please choose category for:"),
+            Line::from(
+                app.db.dishes[app.db_cursor].ingredients[app.edit_cursor]
+                    .name
+                    .to_string(),
+            )
+            .add_modifier(Modifier::BOLD),
+        ];
+        window.render_widget(
+            Paragraph::new(msg).alignment(Alignment::Center),
+            pick_window[0],
+        );
+    }
+
+    let categories = vec![
+        "Annat",
+        "Grönsaker",
+        "Frukt",
+        "Mejeri",
+        "Protein",
+        "Skafferi/Torr varor",
+        "Kryddor",
+    ];
+
+    let mut line: Vec<Line> = Vec::new();
+    for (i, c) in categories.iter().enumerate() {
+        if i == app.picking_cursor {
+            line.push(Line::from(Span::styled(
+                c.to_string(),
+                Style::new()
+                    .fg(Color::LightBlue)
+                    .add_modifier(Modifier::BOLD),
+            )));
+        } else {
+            line.push(Line::from(Span::styled(
+                c.to_string(),
+                Style::new().fg(Color::DarkGray),
+            )));
+        }
+    }
+    window.render_widget(
+        Paragraph::new(line).alignment(Alignment::Center),
+        pick_window[1],
+    );
+
+    window.render_widget(
+        Paragraph::default().alignment(Alignment::Left).block(
+            Block::bordered()
+                .border_style(Style::default().fg(Color::LightCyan))
+                .border_type(Rounded)
+                .borders(Borders::ALL)
+                .title_alignment(Alignment::Center),
+        ),
+        rect,
+    );
+}
+
 fn render_edit_widow(window: &mut Frame, rect: Rect, app: &mut app::App) {
     let edit_window = Layout::default()
         .constraints([Constraint::Fill(1)])
@@ -267,16 +574,16 @@ fn render_edit_widow(window: &mut Frame, rect: Rect, app: &mut app::App) {
     let mut items: Vec<Span> = Vec::new();
     let mut ingredients: Vec<Line> = Vec::new();
 
-    for (n, i) in app.db.dishes[app.db_cursor]
-        .ingredients
-        .iter()
-        .enumerate()
-    {
+    for (n, i) in app.db.dishes[app.db_cursor].ingredients.iter().enumerate() {
         let c = n;
         let n = n + 1;
         let mut t = Modifier::SLOW_BLINK;
 
-        if app.state == AppState::EditingIngredient {
+        if app.state == AppState::EditingIngredient
+            || app.state == AppState::EditingDishName
+            || app.state == AppState::EditingAddIngredient
+            || app.state == AppState::PickingCategory
+        {
             t = Modifier::empty();
         }
 
@@ -325,6 +632,11 @@ fn render_edit_widow(window: &mut Frame, rect: Rect, app: &mut app::App) {
             ));
             items.push(Span::raw(i.name.clone()));
         }
+
+        items.push(Span::styled(
+            format!(" [{}]", ui::get_category_name(i.category.clone())),
+            Style::new().fg(Color::DarkGray),
+        ));
 
         ingredients.push(Line::from(items.clone()));
         items.clear();
@@ -380,7 +692,13 @@ fn render_dish_database(window: &mut Frame, rect: Rect, app: &mut app::App) {
 
             if c == app.db_cursor {
                 let mut t = Modifier::SLOW_BLINK;
-                if app.state == AppState::EditingItem || app.state == AppState::EditingIngredient {
+                if app.state == AppState::EditingDish
+                    || app.state == AppState::EditingIngredient
+                    || app.state == AppState::EditingDishName
+                    || app.state == AppState::AreYouSureDelDish
+                    || app.state == AppState::EditingAddIngredient
+                    || app.state == AppState::PickingCategory
+                {
                     t = Modifier::empty();
                 }
 
@@ -458,7 +776,7 @@ fn render_name_input_box(window: &mut Frame, rect: Rect, app: &mut app::App) {
             .alignment(Alignment::Left)
             .block(
                 Block::bordered()
-                    .border_style(Style::default().fg(Color::Blue).dim())
+                    .border_style(Style::default().fg(Color::LightBlue))
                     .border_type(Rounded)
                     .borders(Borders::ALL)
                     .title("Enter the Dish Name")
@@ -486,7 +804,7 @@ fn render_ingredient_input_box(window: &mut Frame, rect: Rect, app: &mut app::Ap
             .alignment(Alignment::Left)
             .block(
                 Block::bordered()
-                    .border_style(Style::default().fg(Color::Blue).dim())
+                    .border_style(Style::default().fg(Color::LightBlue))
                     .border_type(Rounded)
                     .borders(Borders::ALL)
                     .title("Enter Ingredient")

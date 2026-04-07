@@ -1,95 +1,37 @@
 [[dishes]]
-name = "Tacos Dorados"
-
-[[dishes.ingredients]]
-name = "Torilla"
-category = "Misc"
-frozen = false
-
-[[dishes.ingredients]]
-name = "Riven Ost"
-category = "Misc"
-frozen = false
-
-[[dishes.ingredients]]
-name = "Olja"
-category = "Misc"
-frozen = false
-
-[[dishes]]
-name = "Pannkakor"
-
-[[dishes.ingredients]]
-name = "Ägg"
-category = "Misc"
-frozen = false
-
-[[dishes.ingredients]]
-name = "Mjöl"
-category = "Misc"
-frozen = false
-
-[[dishes.ingredients]]
-name = "Mjölk"
-category = "Misc"
-frozen = false
-
-[[dishes.ingredients]]
-name = "Smör"
-category = "Misc"
-frozen = false
-
-[[dishes]]
-name = "Havregrynsgröt"
-
-[[dishes.ingredients]]
-name = "Havregryn"
-category = "Misc"
-frozen = false
-
-[[dishes.ingredients]]
-name = "Lingonsylt"
-category = "Misc"
-frozen = false
-
-[[dishes.ingredients]]
-name = "Salt"
-category = "Misc"
-frozen = false
-
-[[dishes]]
-name = "Pyttipanna"
+name = "Köttgryta"
 
 [[dishes.ingredients]]
 name = "Potatis"
-category = "Misc"
+category = "Vegtables"
 frozen = false
 
 [[dishes.ingredients]]
-name = "Chorizo"
-category = "Misc"
+name = "Morötter"
+category = "Vegtables"
 frozen = false
 
 [[dishes.ingredients]]
-name = "Hallomi"
-category = "Misc"
+name = "Kålrot"
+category = "Vegtables"
 frozen = false
 
 [[dishes.ingredients]]
-name = "Rödbetor"
-category = "Misc"
+name = "Buljong"
+category = "DryGoods"
 frozen = false
 
 [[dishes.ingredients]]
-name = "Inlagd Gruka"
-category = "Misc"
+name = "Öl"
+category = "DryGoods"
 frozen = false
 
 [[dishes.ingredients]]
-name = "Lök"
-category = "Misc"
+name = "Ris"
+category = "DryGoods"
 frozen = false
 
-[[dishes]]
-name = "Test"
-ingredients = []
+[[dishes.ingredients]]
+name = "Kött"
+category = "Misc"
+frozen = false

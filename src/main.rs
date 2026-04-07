@@ -15,6 +15,8 @@ use ratatui::prelude::CrosstermBackend;
 use std::error::Error;
 use std::io::stdout;
 
+use crate::app::AppState;
+
 mod app;
 mod db;
 mod items;
@@ -64,7 +66,7 @@ fn run(
             let chunks = Layout::default()
                 .direction(Direction::Horizontal)
                 .constraints([
-                    Constraint::Length(25),
+                    Constraint::Length(26),
                     Constraint::Length(2),
                     Constraint::Fill(1),
                 ])
@@ -96,7 +98,35 @@ fn run(
                         code: KeyCode::Char('s'),
                         modifiers: KeyModifiers::CONTROL,
                         ..
-                    } => app.push_dish_to_db(),
+                    } => {
+                        if app.pending_dish.is_some() {
+                            app.push_dish_to_db()
+                        }
+                    }
+                    KeyEvent {
+                        code: KeyCode::Char('n'),
+                        modifiers: KeyModifiers::CONTROL,
+                        ..
+                    } => {
+                        app.state = app::AppState::EditingDishName;
+                        app.pending_dish = Some(app.db.dishes[app.db_cursor].to_owned());
+                    }
+                    KeyEvent {
+                        code: KeyCode::Char('a'),
+                        modifiers: KeyModifiers::CONTROL,
+                        ..
+                    } => app.state = AppState::EditingAddIngredient,
+                    KeyEvent {
+                        code: KeyCode::Char('k'),
+                        modifiers: KeyModifiers::CONTROL,
+                        ..
+                    } => {
+                        if app.state == AppState::EditingDish {
+                            app.pending_dish = Some(app.db.dishes[app.db_cursor].clone());
+                            app.prev_state = Some(app.state);
+                            app.state = AppState::PickingCategory;
+                        }
+                    }
                     //plain keypresses
                     KeyEvent { code, .. } => match code {
                         KeyCode::Char('q') => {
