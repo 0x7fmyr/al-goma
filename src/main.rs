@@ -8,7 +8,7 @@ use ratatui::Terminal;
 use ratatui::layout::{Constraint, Direction, Layout, Margin};
 use ratatui::style::Color;
 use ratatui::style::Style;
-use ratatui::widgets::{Block, BorderType::Rounded, Borders, Paragraph};
+use ratatui::widgets::{Block, BorderType, Borders, Paragraph};
 
 use ratatui::prelude::CrosstermBackend;
 
@@ -20,8 +20,10 @@ use crate::app::AppState;
 mod app;
 mod db;
 mod items;
+mod list;
 mod render;
 mod ui;
+
 //claude --resume ce8bf707-c036-400b-a940-359d721e90bc
 fn main() -> Result<(), Box<dyn Error>> {
     //set up
@@ -45,50 +47,75 @@ fn run(
 ) -> Result<(), Box<dyn Error>> {
     loop {
         terminal.draw(|window| {
-            let edge_w = Layout::default()
-                .direction(Direction::Vertical)
-                .constraints([
-                    Constraint::Length(1),
-                    Constraint::Fill(1),
-                    Constraint::Length(1),
-                ])
-                .split(window.area());
+            if window.area().height <= 20 || window.area().width <= 75 {
+                let edge_h = Layout::default()
+                    .direction(Direction::Horizontal)
+                    .constraints([
+                        Constraint::Fill(1),
+                        Constraint::Length(39), // main window
+                        Constraint::Fill(1),
+                    ])
+                    .split(window.area());
 
-            let edge_w = Layout::default()
-                .direction(Direction::Horizontal)
-                .constraints([
-                    Constraint::Length(2),
-                    Constraint::Fill(1), // main window
-                    Constraint::Length(2),
-                ])
-                .split(edge_w[1]);
+                let edge_v = Layout::default()
+                    .direction(Direction::Vertical)
+                    .constraints([
+                        Constraint::Fill(1),
+                        Constraint::Length(1),
+                        Constraint::Fill(1),
+                    ])
+                    .split(edge_h[1]);
 
-            let chunks = Layout::default()
-                .direction(Direction::Horizontal)
-                .constraints([
-                    Constraint::Length(26),
-                    Constraint::Length(2),
-                    Constraint::Fill(1),
-                ])
-                .split(edge_w[1].inner(Margin {
-                    horizontal: 3,
-                    vertical: 2,
-                }));
+                window.render_widget(
+                    Paragraph::new("You're gonna need a bigger terminal..."),
+                    edge_v[1],
+                );
+            } else {
+                let edge_w = Layout::default()
+                    .direction(Direction::Vertical)
+                    .constraints([
+                        Constraint::Length(1),
+                        Constraint::Fill(1),
+                        Constraint::Length(1),
+                    ])
+                    .split(window.area());
 
-            // MAIN WINDOW
-            window.render_widget(
-                Paragraph::default().block(
-                    Block::bordered()
-                        .border_style(Style::default().fg(Color::Blue))
-                        .border_type(Rounded)
-                        .borders(Borders::ALL),
-                ),
-                edge_w[1],
-            );
+                let edge_w = Layout::default()
+                    .direction(Direction::Horizontal)
+                    .constraints([
+                        Constraint::Length(2),
+                        Constraint::Fill(1), // main window
+                        Constraint::Length(2),
+                    ])
+                    .split(edge_w[1]);
 
-            render::render_main_left(window, chunks[0], app);
+                let chunks = Layout::default()
+                    .direction(Direction::Horizontal)
+                    .constraints([
+                        Constraint::Length(26),
+                        Constraint::Length(2),
+                        Constraint::Fill(1),
+                    ])
+                    .split(edge_w[1].inner(Margin {
+                        horizontal: 3,
+                        vertical: 2,
+                    }));
 
-            render::render_main_right(window, chunks[2], app);
+                // MAIN WINDOW
+                window.render_widget(
+                    Paragraph::default().block(
+                        Block::bordered()
+                            .border_style(Style::default().fg(Color::Blue))
+                            .border_type(BorderType::Thick)
+                            .borders(Borders::ALL),
+                    ),
+                    edge_w[1],
+                );
+
+                render::main_window::left(window, chunks[0], app);
+
+                render::main_window::right(window, chunks[2], app);
+            }
         })?;
         if event::poll(std::time::Duration::from_millis(16))? {
             if let Event::Key(key) = event::read()? {
@@ -109,7 +136,7 @@ fn run(
                         ..
                     } => {
                         app.state = app::AppState::EditingDishName;
-                        app.pending_dish = Some(app.db.dishes[app.db_cursor].to_owned());
+                        app.pending_dish = Some(app.db.dishes[app.db_cursor.cursor].to_owned());
                     }
                     KeyEvent {
                         code: KeyCode::Char('a'),
@@ -122,7 +149,7 @@ fn run(
                         ..
                     } => {
                         if app.state == AppState::EditingDish {
-                            app.pending_dish = Some(app.db.dishes[app.db_cursor].clone());
+                            app.pending_dish = Some(app.db.dishes[app.db_cursor.cursor].clone());
                             app.prev_state = Some(app.state);
                             app.state = AppState::PickingCategory;
                         }

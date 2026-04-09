@@ -13,7 +13,7 @@ pub enum Category {
     Misc,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct Dish {
     pub name: String,
     pub ingredients: Vec<Ingredient>,
@@ -335,6 +335,9 @@ pub fn ingredient_category_db() -> HashMap<String, Category> {
         // Torrvaror
         ("pasta".to_string(), Category::DryGoods),
         ("spaghetti".to_string(), Category::DryGoods),
+        ("spaggetti".to_string(), Category::DryGoods),
+        ("spagetti".to_string(), Category::DryGoods),
+        ("spageti".to_string(), Category::DryGoods),
         ("penne".to_string(), Category::DryGoods),
         ("fusilli".to_string(), Category::DryGoods),
         ("rigatoni".to_string(), Category::DryGoods),

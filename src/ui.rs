@@ -3,22 +3,28 @@ use crate::{
     items,
 };
 
+#[derive(Debug, PartialEq, PartialOrd, Clone, Copy)]
+pub struct Cursor {
+    pub cursor: usize,
+    pub scroll: usize,
+    pub visable_lines: usize,
+}
+
 impl App {
     pub fn move_focus_left(&mut self) {
-        if self.state == AppState::AreYouSureDelDish {
+        if self.state == AppState::AreYouSureDelDish || self.state == AppState::ReplaceList {
             self.move_cursor_up();
             return;
         }
 
         if self.selected_space == Space::MainRight {
             self.selected_space = Space::MainLeft;
-            //self.state = AppState::MovingFocus
             self.moving_focus = true
         }
     }
 
     pub fn move_focus_right(&mut self) {
-        if self.state == AppState::AreYouSureDelDish {
+        if self.state == AppState::AreYouSureDelDish || self.state == AppState::ReplaceList {
             self.move_cursor_down();
             return;
         }
@@ -30,8 +36,8 @@ impl App {
     }
 
     pub fn move_cursor_down(&mut self) {
-        if self.state == AppState::AreYouSureDelDish {
-            self.del_cursor = 1;
+        if self.state == AppState::AreYouSureDelDish || self.state == AppState::ReplaceList {
+            self.ays_cursor = 1;
             return;
         }
 
@@ -45,22 +51,35 @@ impl App {
                 }
             }
             Space::MainRight => match self.state {
+                AppState::ShowListOfIngredients => {
+                    if self.shopping_list.is_empty() {
+                        return;
+                    }
+
+                    if self.db_cursor.cursor < self.shopping_list.len() - 1 {
+                        self.db_cursor.cursor += 1;
+                        update_scroll(&mut self.db_cursor);
+                    }
+                }
                 AppState::ViewingDatabase => {
                     if self.db.dishes.is_empty() {
                         return;
                     }
 
-                    if self.db_cursor < self.db.dishes.len() - 1 {
-                        self.db_cursor += 1
+                    if self.db_cursor.cursor < self.db.dishes.len() - 1 {
+                        self.db_cursor.cursor += 1
                     }
                 }
                 AppState::EditingDish => {
-                    if self.db.dishes[self.db_cursor].ingredients.is_empty() {
+                    if self.db.dishes[self.db_cursor.cursor].ingredients.is_empty() {
                         return;
                     }
 
-                    if self.edit_cursor < self.db.dishes[self.db_cursor].ingredients.len() - 1 {
-                        self.edit_cursor += 1
+                    if self.edit_cursor.cursor
+                        < self.db.dishes[self.db_cursor.cursor].ingredients.len() - 1
+                    {
+                        self.edit_cursor.cursor += 1;
+                        update_scroll(&mut self.edit_cursor);
                     }
                 }
                 AppState::PickingCategory => {
@@ -70,14 +89,21 @@ impl App {
 
                     self.picking_cursor += 1
                 }
+                AppState::ShowGeneratedList => {
+                    if let Some(list) = self.list.as_ref() {
+                        if self.edit_cursor.cursor < list.len() - 1 {
+                            self.edit_cursor.cursor += 1;
+                        }
+                    }
+                }
                 _ => {}
             },
         }
     }
 
     pub fn move_cursor_up(&mut self) {
-        if self.state == AppState::AreYouSureDelDish {
-            self.del_cursor = 0;
+        if self.state == AppState::AreYouSureDelDish || self.state == AppState::ReplaceList {
+            self.ays_cursor = 0;
             return;
         }
 
@@ -90,20 +116,22 @@ impl App {
                 self.cursor -= 1;
             }
             Space::MainRight => match self.state {
-                AppState::ViewingDatabase => {
+                AppState::ViewingDatabase | AppState::ShowListOfIngredients => {
                     if self.db.dishes.is_empty() {
                         return;
                     }
-                    if self.db_cursor > 0 {
-                        self.db_cursor -= 1
+                    if self.db_cursor.cursor > 0 {
+                        self.db_cursor.cursor -= 1;
+                        update_scroll(&mut self.db_cursor);
                     }
                 }
                 AppState::EditingDish => {
-                    if self.db.dishes[self.db_cursor].ingredients.is_empty() {
+                    if self.db.dishes[self.db_cursor.cursor].ingredients.is_empty() {
                         return;
                     }
-                    if self.edit_cursor > 0 {
-                        self.edit_cursor -= 1
+                    if self.edit_cursor.cursor > 0 {
+                        self.edit_cursor.cursor -= 1;
+                        update_scroll(&mut self.edit_cursor);
                     }
                 }
                 AppState::PickingCategory => {
@@ -112,11 +140,25 @@ impl App {
                     }
                     self.picking_cursor -= 1
                 }
+                AppState::ShowGeneratedList => {
+                    if self.edit_cursor.cursor > 0 {
+                        self.edit_cursor.cursor -= 1;
+                    }
+                }
                 _ => {}
             },
         }
     }
 }
+
+pub fn update_scroll(input: &mut Cursor) {
+    if input.cursor < input.scroll {
+        input.scroll = input.cursor;
+    } else if input.cursor >= input.scroll + input.visable_lines {
+        input.scroll = input.cursor - input.visable_lines + 1;
+    }
+}
+
 pub fn get_category_name(c: items::Category) -> String {
     match c {
         items::Category::Dairy => String::from("Mejeri"),

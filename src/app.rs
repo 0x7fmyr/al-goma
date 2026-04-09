@@ -1,4 +1,7 @@
 use crate::items::{self, Category, Database, Dish};
+use crate::list;
+use crate::ui::Cursor;
+use crate::ui::update_scroll;
 use crate::{db, items::Ingredient};
 use std::collections::HashMap;
 
@@ -11,6 +14,7 @@ pub enum Space {
 #[derive(Debug, PartialEq, Clone, Copy)]
 pub enum AppState {
     Normal,
+    MovingFocus,
     EnteringDishName,
     EnteringIngredients,
     PickingCategory,
@@ -20,15 +24,21 @@ pub enum AppState {
     EditingAddIngredient,
     EditingDishName,
     AreYouSureDelDish,
+    NewList,
+    ReplaceList,
+    ShowGeneratedList,
+    ShowListOfIngredients,
+    ViewSavedList,
 }
 
 #[derive(Debug)]
 pub struct App {
-    pub list: Option<Vec<String>>,
+    pub list: Option<Vec<Dish>>,
+    pub shopping_list: Vec<Ingredient>,
     pub cursor: usize,
-    pub db_cursor: usize,
-    pub edit_cursor: usize,
-    pub del_cursor: usize,
+    pub db_cursor: Cursor,
+    pub edit_cursor: Cursor,
+    pub ays_cursor: usize,
     pub picking_cursor: usize,
     pub moving_focus: bool,
     pub selected_space: Space,
@@ -44,11 +54,22 @@ pub struct App {
 impl App {
     pub fn init() -> Self {
         App {
-            list: None,
+            list: list::load(),
+            shopping_list: list::init_shopping_list(list::load()),
             cursor: 0,
-            db_cursor: 0,
-            edit_cursor: 0,
-            del_cursor: 0,
+
+            db_cursor: Cursor {
+                cursor: 0,
+                scroll: 0,
+                visable_lines: 0,
+            },
+
+            edit_cursor: Cursor {
+                cursor: 0,
+                scroll: 0,
+                visable_lines: 0,
+            },
+            ays_cursor: 0,
             picking_cursor: 0,
             moving_focus: false,
             selected_space: Space::MainLeft,
@@ -61,7 +82,6 @@ impl App {
             left_window_actions: vec![
                 "New List",
                 "View/Edit List",
-                "Add Dish",
                 "Add Dish to Dishtabase",
                 "View/Edit Dishtabase",
                 "Upload",
@@ -74,7 +94,8 @@ impl App {
             | AppState::EnteringIngredients
             | AppState::EditingIngredient
             | AppState::EditingDishName
-            | AppState::EditingAddIngredient => {
+            | AppState::EditingAddIngredient
+            | AppState::NewList => {
                 self.input.push(c);
             }
             _ => {}
@@ -86,7 +107,8 @@ impl App {
             AppState::EnteringDishName
             | AppState::EnteringIngredients
             | AppState::EditingIngredient
-            | AppState::EditingAddIngredient => {
+            | AppState::EditingAddIngredient
+            | AppState::NewList => {
                 self.input.pop();
             }
             _ => {}
@@ -95,57 +117,83 @@ impl App {
 
     pub fn handle_enter(&mut self) {
         if self.moving_focus {
-            if (self.selected_space == Space::MainLeft) && self.cursor == 3 {
-                self.state = AppState::EnteringDishName;
-                self.selected_space = Space::MainRight
-            } else if self.selected_space == Space::MainLeft && self.cursor == 4 {
-                db::load();
+            self.prev_state = Some(self.state);
+            self.state = AppState::MovingFocus;
+                self.db_cursor.cursor = 0;
+                self.db_cursor.scroll = 0;
+        }
 
-                self.state = AppState::ViewingDatabase;
-                self.selected_space = Space::MainRight;
-            }
-            self.moving_focus = false
-        } else {
-            match self.state {
-                AppState::Normal => {
-                    if (self.selected_space == Space::MainLeft) && self.cursor == 3 {
-                        self.state = AppState::EnteringDishName;
-                        self.selected_space = Space::MainRight
-                    } else if self.selected_space == Space::MainLeft && self.cursor == 4 {
-                        db::load();
-                        self.state = AppState::ViewingDatabase;
+        match self.state {
+            AppState::Normal | AppState::MovingFocus => {
+                if self.selected_space == Space::MainLeft && self.cursor == 0 {
+                    if self.list.is_some() {
+                        self.state = AppState::ReplaceList;
                         self.selected_space = Space::MainRight;
-                    }
-                }
-                AppState::EnteringDishName => {
-                    self.confirm_dish_name();
-                }
-                AppState::EnteringIngredients => {
-                    self.confirm_ingredient();
-                }
-                AppState::ViewingDatabase => {
-                    if self.db.dishes.is_empty() {
+                        self.moving_focus = false;
+
                         return;
                     }
-                    self.state = AppState::EditingDish;
+
+                    self.state = AppState::NewList;
+                    self.selected_space = Space::MainRight
+                } else if self.selected_space == Space::MainLeft && self.cursor == 1 {
+                    self.state = AppState::ShowListOfIngredients;
+                    self.selected_space = Space::MainRight;
+                    return;
+                } else if self.selected_space == Space::MainLeft && self.cursor == 2 {
+                    self.state = AppState::EnteringDishName;
+                    self.selected_space = Space::MainRight
+                } else if self.selected_space == Space::MainLeft && self.cursor == 3 {
+                    db::load();
+                    self.state = AppState::ViewingDatabase;
+                    self.selected_space = Space::MainRight;
                 }
-                AppState::EditingDish => {
-                    self.state = AppState::EditingIngredient;
-                    self.pending_dish = Some(self.db.dishes[self.db_cursor].to_owned());
-                }
-                AppState::EditingIngredient => self.edit_ingredient(),
-                AppState::EditingDishName => self.edit_dish_name(),
-                AppState::AreYouSureDelDish => {
-                    if self.del_cursor == 0 {
-                        self.delete_dish();
-                    } else {
-                        self.state = AppState::ViewingDatabase
-                    }
-                }
-                AppState::EditingAddIngredient => self.edit_add_ingredient(),
-                AppState::PickingCategory => self.confim_category(),
-                _ => {}
+                self.moving_focus = false
             }
+            AppState::NewList => {
+                self.generate_list();
+            }
+            AppState::ReplaceList => {
+                if self.ays_cursor == 0 {
+                    self.list = None;
+                    self.state = AppState::NewList
+                } else {
+                    self.state = AppState::Normal;
+                    self.selected_space = Space::MainLeft
+                }
+            }
+            AppState::ShowGeneratedList => {
+                self.state = AppState::ShowListOfIngredients;
+                self.cursor = 1;
+            }
+            AppState::EnteringDishName => {
+                self.confirm_dish_name();
+            }
+            AppState::EnteringIngredients => {
+                self.confirm_ingredient();
+            }
+            AppState::ViewingDatabase => {
+                if self.db.dishes.is_empty() {
+                    return;
+                }
+                self.state = AppState::EditingDish;
+            }
+            AppState::EditingDish => {
+                self.state = AppState::EditingIngredient;
+                self.pending_dish = Some(self.db.dishes[self.db_cursor.cursor].to_owned());
+            }
+            AppState::EditingIngredient => self.edit_ingredient(),
+            AppState::EditingDishName => self.edit_dish_name(),
+            AppState::AreYouSureDelDish => {
+                if self.ays_cursor == 0 {
+                    self.delete_dish();
+                } else {
+                    self.state = AppState::ViewingDatabase
+                }
+            }
+            AppState::EditingAddIngredient => self.edit_add_ingredient(),
+            AppState::PickingCategory => self.confim_category(),
+            _ => {}
         }
     }
 
@@ -153,12 +201,13 @@ impl App {
         if matches!(self.state, AppState::EditingDish)
             || matches!(self.state, AppState::AreYouSureDelDish)
         {
-            self.db.dishes[self.db_cursor]
+            self.db.dishes[self.db_cursor.cursor]
                 .ingredients
                 .sort_by_key(|c| c.category);
             self.state = AppState::ViewingDatabase;
-            self.edit_cursor = 0;
-            self.del_cursor = 0;
+            self.edit_cursor.cursor = 0;
+            self.ays_cursor = 0;
+            self.edit_cursor.scroll = 0;
         } else if matches!(self.state, AppState::EditingIngredient)
             || matches!(self.state, AppState::EditingDishName)
         {
@@ -180,6 +229,8 @@ impl App {
 
             self.input.clear();
             self.cursor = 0;
+            self.db_cursor.cursor = 0;
+            self.edit_cursor.cursor = 0;
         }
     }
 
@@ -187,6 +238,7 @@ impl App {
         match self.state {
             AppState::EnteringIngredients | AppState::EditingDish => self.delete_ingredient(),
             AppState::ViewingDatabase => self.state = AppState::AreYouSureDelDish,
+            AppState::ShowGeneratedList => self.generate_new_dish(),
             _ => {}
         }
     }
@@ -216,11 +268,13 @@ impl App {
         let input = uppercase_words(&self.input.clone());
 
         if let Some(pending_dish) = self.pending_dish.as_mut() {
-            pending_dish.ingredients[self.edit_cursor].name.clear();
-            pending_dish.ingredients[self.edit_cursor].name = input;
-            pending_dish.ingredients[self.edit_cursor].category = found_category;
+            pending_dish.ingredients[self.edit_cursor.cursor]
+                .name
+                .clear();
+            pending_dish.ingredients[self.edit_cursor.cursor].name = input;
+            pending_dish.ingredients[self.edit_cursor.cursor].category = found_category;
 
-            self.db.dishes[self.db_cursor] = pending_dish.clone();
+            self.db.dishes[self.db_cursor.cursor] = pending_dish.clone();
             db::save(&self.db);
 
             self.pending_dish = None;
@@ -231,7 +285,7 @@ impl App {
     }
 
     pub fn edit_add_ingredient(&mut self) {
-        self.pending_dish = Some(self.db.dishes[self.db_cursor].clone());
+        self.pending_dish = Some(self.db.dishes[self.db_cursor.cursor].clone());
         let input = uppercase_words(&self.input.clone());
         let found_category = self.find_category(input.clone());
         if let Some(pending_dish) = self.pending_dish.as_mut() {
@@ -241,7 +295,9 @@ impl App {
                 frozen: false,
             });
 
-            self.db.dishes[self.db_cursor] = pending_dish.clone();
+            self.db.dishes[self.db_cursor.cursor] = pending_dish.clone();
+            self.edit_cursor.cursor = self.db.dishes[self.db_cursor.cursor].ingredients.len() - 1;
+            update_scroll(&mut self.edit_cursor);
             self.state = AppState::EditingDish
         }
         self.input.clear();
@@ -260,7 +316,7 @@ impl App {
             pending_dish.name.clear();
             pending_dish.name = input;
 
-            self.db.dishes[self.db_cursor] = pending_dish.clone();
+            self.db.dishes[self.db_cursor.cursor] = pending_dish.clone();
 
             self.input.clear();
             db::save(&self.db);
@@ -273,12 +329,12 @@ impl App {
         if self.db.dishes.len() == 0 {
             return;
         }
-        self.db.dishes.remove(self.db_cursor);
+        self.db.dishes.remove(self.db_cursor.cursor);
 
-        self.del_cursor = 0;
+        self.ays_cursor = 0;
 
-        if self.db_cursor == self.db.dishes.len() && self.db.dishes.len() > 0 {
-            self.db_cursor -= 1;
+        if self.db_cursor.cursor == self.db.dishes.len() && self.db.dishes.len() > 0 {
+            self.db_cursor.cursor -= 1;
         }
 
         db::save(&self.db);
@@ -293,20 +349,20 @@ impl App {
                 }
             }
             AppState::EditingDish => {
-                self.pending_dish = Some(self.db.dishes[self.db_cursor].to_owned());
+                self.pending_dish = Some(self.db.dishes[self.db_cursor.cursor].to_owned());
 
                 if let Some(pending_dish) = self.pending_dish.as_mut() {
                     if !pending_dish.ingredients.is_empty() {
-                        pending_dish.ingredients.remove(self.edit_cursor);
+                        pending_dish.ingredients.remove(self.edit_cursor.cursor);
                     }
 
-                    if self.edit_cursor == pending_dish.ingredients.len()
+                    if self.edit_cursor.cursor == pending_dish.ingredients.len()
                         && pending_dish.ingredients.len() > 0
                     {
-                        self.edit_cursor -= 1;
+                        self.edit_cursor.cursor -= 1;
                     }
 
-                    self.db.dishes[self.db_cursor] = pending_dish.clone();
+                    self.db.dishes[self.db_cursor.cursor] = pending_dish.clone();
                     db::save(&self.db);
                     self.pending_dish = None;
                 }
@@ -339,12 +395,10 @@ impl App {
                 .push(i.clone());
         }
 
-        let dish_in_transit = self.pending_dish.clone();
-
         if let Some(prev_state) = self.prev_state {
             if prev_state == AppState::EditingDish {
-                self.db.dishes[self.db_cursor].ingredients[self.edit_cursor].category =
-                    chosen_category;
+                self.db.dishes[self.db_cursor.cursor].ingredients[self.edit_cursor.cursor]
+                    .category = chosen_category;
             }
 
             self.state = prev_state;
