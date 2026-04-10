@@ -51,7 +51,7 @@ impl App {
                 }
             }
             Space::MainRight => match self.state {
-                AppState::ShowListOfIngredients => {
+                AppState::ShowShoppingList => {
                     if self.shopping_list.is_empty() {
                         return;
                     }
@@ -90,7 +90,7 @@ impl App {
                     self.picking_cursor += 1
                 }
                 AppState::ShowGeneratedList => {
-                    if let Some(list) = self.list.as_ref() {
+                    if let Some(list) = self.current_dish_list.as_ref() {
                         if self.edit_cursor.cursor < list.len() - 1 {
                             self.edit_cursor.cursor += 1;
                         }
@@ -116,7 +116,7 @@ impl App {
                 self.cursor -= 1;
             }
             Space::MainRight => match self.state {
-                AppState::ViewingDatabase | AppState::ShowListOfIngredients => {
+                AppState::ViewingDatabase | AppState::ShowShoppingList => {
                     if self.db.dishes.is_empty() {
                         return;
                     }

@@ -27,13 +27,13 @@ pub enum AppState {
     NewList,
     ReplaceList,
     ShowGeneratedList,
-    ShowListOfIngredients,
-    ViewSavedList,
+    ShowShoppingList,
+    AddToShoppingList,
 }
 
 #[derive(Debug)]
 pub struct App {
-    pub list: Option<Vec<Dish>>,
+    pub current_dish_list: Option<Vec<Dish>>,
     pub shopping_list: Vec<Ingredient>,
     pub cursor: usize,
     pub db_cursor: Cursor,
@@ -54,8 +54,8 @@ pub struct App {
 impl App {
     pub fn init() -> Self {
         App {
-            list: list::load(),
-            shopping_list: list::init_shopping_list(list::load()),
+            current_dish_list: list::load(),
+            shopping_list: list::load_shopping_list_config(),
             cursor: 0,
 
             db_cursor: Cursor {
@@ -84,7 +84,7 @@ impl App {
                 "View/Edit List",
                 "Add Dish to Dishtabase",
                 "View/Edit Dishtabase",
-                "Upload",
+                //"Upload",
             ],
         }
     }
@@ -119,14 +119,14 @@ impl App {
         if self.moving_focus {
             self.prev_state = Some(self.state);
             self.state = AppState::MovingFocus;
-                self.db_cursor.cursor = 0;
-                self.db_cursor.scroll = 0;
+            self.db_cursor.cursor = 0;
+            self.db_cursor.scroll = 0;
         }
 
         match self.state {
             AppState::Normal | AppState::MovingFocus => {
                 if self.selected_space == Space::MainLeft && self.cursor == 0 {
-                    if self.list.is_some() {
+                    if self.current_dish_list.is_some() {
                         self.state = AppState::ReplaceList;
                         self.selected_space = Space::MainRight;
                         self.moving_focus = false;
@@ -137,7 +137,7 @@ impl App {
                     self.state = AppState::NewList;
                     self.selected_space = Space::MainRight
                 } else if self.selected_space == Space::MainLeft && self.cursor == 1 {
-                    self.state = AppState::ShowListOfIngredients;
+                    self.state = AppState::ShowShoppingList;
                     self.selected_space = Space::MainRight;
                     return;
                 } else if self.selected_space == Space::MainLeft && self.cursor == 2 {
@@ -155,7 +155,7 @@ impl App {
             }
             AppState::ReplaceList => {
                 if self.ays_cursor == 0 {
-                    self.list = None;
+                    self.current_dish_list = None;
                     self.state = AppState::NewList
                 } else {
                     self.state = AppState::Normal;
@@ -163,7 +163,7 @@ impl App {
                 }
             }
             AppState::ShowGeneratedList => {
-                self.state = AppState::ShowListOfIngredients;
+                self.state = AppState::ShowShoppingList;
                 self.cursor = 1;
             }
             AppState::EnteringDishName => {
@@ -236,7 +236,9 @@ impl App {
 
     pub fn handle_delete(&mut self) {
         match self.state {
-            AppState::EnteringIngredients | AppState::EditingDish => self.delete_ingredient(),
+            AppState::EnteringIngredients | AppState::EditingDish | AppState::ShowShoppingList => {
+                self.delete_ingredient()
+            }
             AppState::ViewingDatabase => self.state = AppState::AreYouSureDelDish,
             AppState::ShowGeneratedList => self.generate_new_dish(),
             _ => {}
@@ -366,6 +368,22 @@ impl App {
                     db::save(&self.db);
                     self.pending_dish = None;
                 }
+            }
+            AppState::ShowShoppingList => {
+                if !self.shopping_list.is_empty() {
+                    self.shopping_list.remove(self.db_cursor.cursor);
+                    if self.db_cursor.cursor == self.shopping_list.len()
+                        || self.db_cursor.cursor > self.shopping_list.len()
+                    {
+                        if !self.shopping_list.is_empty() {
+                            self.db_cursor.cursor = self.shopping_list.len() - 1;
+                        }
+                    }
+                    if self.shopping_list.is_empty() {
+                        self.current_dish_list = None
+                    }
+                }
+                list::save_shopping_list_config(self.shopping_list.clone());
             }
 
             _ => {}

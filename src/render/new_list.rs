@@ -110,7 +110,7 @@ pub fn show_generated_list(window: &mut Frame, rect: Rect, app: &mut app::App) {
     let mut items: Vec<Span> = Vec::new();
     let mut ingredients: Vec<Line> = Vec::new();
 
-    if let Some(list) = app.list.as_mut() {
+    if let Some(list) = app.current_dish_list.as_mut() {
         for (n, i) in list.iter().enumerate() {
             let c = n;
             let n = n + 1;
@@ -169,11 +169,6 @@ pub fn show_generated_list(window: &mut Frame, rect: Rect, app: &mut app::App) {
                 ));
                 items.push(Span::raw(i.name.clone()));
             }
-
-            // items.push(Span::styled(
-            //     format!(" [{}]", ui::get_category_name(i..clone())),
-            //     Style::new().fg(Color::DarkGray),
-            // ));
 
             ingredients.push(Line::from(items.clone()));
             items.clear();

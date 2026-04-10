@@ -142,7 +142,13 @@ fn run(
                         code: KeyCode::Char('a'),
                         modifiers: KeyModifiers::CONTROL,
                         ..
-                    } => app.state = AppState::EditingAddIngredient,
+                    } => {
+                        if app.state == AppState::EditingDish {
+                            app.state = AppState::EditingAddIngredient;
+                        } else if app.state == AppState::ShowShoppingList {
+                            app.state = AppState::AddToShoppingList
+                        }
+                    }
                     KeyEvent {
                         code: KeyCode::Char('k'),
                         modifiers: KeyModifiers::CONTROL,

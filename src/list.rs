@@ -4,6 +4,7 @@ use std::collections::HashSet;
 use std::fs;
 
 use rand::Rng;
+use serde::{Deserialize, Serialize};
 
 impl App {
     pub fn generate_list(&mut self) {
@@ -13,7 +14,14 @@ impl App {
                 return;
             }
         }
-        let mut number_of_dishes = self.input.parse::<usize>().unwrap();
+        let mut number_of_dishes: usize;
+        if self.input.len() > 0 {
+            number_of_dishes = self.input.parse::<usize>().unwrap();
+        } else {
+            self.state = AppState::Normal;
+            return;
+        }
+
         let mut found_dishes: Vec<Dish> = Vec::new();
         let mut i = 0;
 
@@ -34,14 +42,14 @@ impl App {
             i += 1
         }
 
-        self.list.replace(found_dishes); // = Some(found_dishes);
+        self.current_dish_list.replace(found_dishes); // = Some(found_dishes);
 
-        make_shopping_list(self.list.clone(), &mut self.shopping_list);
+        make_shopping_list(self.current_dish_list.clone(), &mut self.shopping_list);
 
-        let save_file = Database {
-            dishes: self.list.to_owned().unwrap(),
-        };
-        save_list(&save_file);
+        save_list(self.current_dish_list.clone());
+
+        save_shopping_list_config(self.shopping_list.clone());
+
         self.input.clear();
         self.state = AppState::ShowGeneratedList
     }
@@ -54,7 +62,7 @@ impl App {
             let i = rng.gen_range(0..self.db.dishes.len());
             let rand_dish = self.db.dishes[i].clone();
 
-            if let Some(list) = self.list.as_mut() {
+            if let Some(list) = self.current_dish_list.as_mut() {
                 if list[selected_dish].name == rand_dish.name {
                     continue;
                 }
@@ -87,22 +95,49 @@ fn make_shopping_list(list: Option<Vec<Dish>>, shopping_list: &mut Vec<Ingredien
     }
 }
 
-pub fn save_list(list: &Database) {
-    let contents = toml::to_string(list).expect("failed to serialize...");
-    fs::write("list.toml", contents).expect("failed to write file...")
+pub fn save_list(list: Option<Vec<Dish>>) {
+    if let Some(save_list) = list {
+        let save_file = Database { dishes: save_list };
+        let contents = toml::to_string(&save_file).expect("failed to serialize...");
+        fs::write("list.toml", contents).expect("failed to write file...")
+    }
 }
 
-pub fn init_shopping_list(list: Option<Vec<Dish>>) -> Vec<Ingredient> {
-    let mut shopping_list: Vec<Ingredient> = Vec::new();
-    if let Some(dishes) = list {
-        for i in dishes.iter() {
-            for x in i.ingredients.clone() {
-                shopping_list.push(x);
-            }
-        }
-    }
-    shopping_list
+#[derive(Serialize, Deserialize)]
+pub struct ShListSaveFile {
+    pub items: Vec<Ingredient>,
 }
+
+pub fn save_shopping_list_config(shopping_list: Vec<Ingredient>) {
+    let save_file = ShListSaveFile {
+        items: shopping_list,
+    };
+
+    let contents = toml::to_string(&save_file).expect("failed to serialize...");
+    fs::write("sh_list.toml", contents).expect("failed to write file...")
+}
+
+pub fn load_shopping_list_config() -> Vec<Ingredient> {
+    let contents = match fs::read_to_string("sh_list.toml") {
+        Ok(s) => s,
+        Err(_) => return vec![],
+    };
+    let list_load: ShListSaveFile = toml::from_str(&contents).expect("sh_list.toml is fucked!");
+
+    list_load.items
+}
+
+// pub fn init_shopping_list(list: Option<Vec<Dish>>) -> Vec<Ingredient> {
+//     let mut shopping_list: Vec<Ingredient> = Vec::new();
+//     if let Some(dishes) = list {
+//         for i in dishes.iter() {
+//             for x in i.ingredients.clone() {
+//                 shopping_list.push(x);
+//             }
+//         }
+//     }
+//     shopping_list
+// }
 
 pub fn load() -> Option<Vec<Dish>> {
     let contents = match fs::read_to_string("list.toml") {

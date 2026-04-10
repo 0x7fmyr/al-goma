@@ -84,8 +84,8 @@ pub fn right(window: &mut Frame, rect: Rect, app: &mut app::App) {
         AppState::ShowGeneratedList => {
             tooltip = "[enter] accept   [del] new dish   [esc] cancel".to_string();
         }
-        AppState::ShowListOfIngredients => {
-            tooltip = "[enter] accept   [del] remove   [ctrl+a] add  [esc] cancel".to_string();
+        AppState::ShowShoppingList => {
+            tooltip = "[del] remove   [ctrl+a] add   [ctrl+p] print txt   [esc] cancel".to_string();
         }
         _ => {}
     }
@@ -100,30 +100,51 @@ pub fn right(window: &mut Frame, rect: Rect, app: &mut app::App) {
     window.render_widget(Paragraph::default().block(main_block), rect);
 
     if matches!(app.state, AppState::NewList) || matches!(app.state, AppState::ReplaceList) {
-        let w: u16 = 40;
-        let h: u16 = 10;
+        let mut w: u16 = 40;
+        let mut h: u16 = 10;
         let center_y = rect.y + (rect.height / 2) - (h / 2);
         let center_x = rect.x + (rect.width / 2) - (w / 2);
-
+        // todo clear
         if matches!(app.state, AppState::ReplaceList) {
+            w += 5;
+            h += 1;
             let msg = vec![
                 Line::from("Generating a new list will"),
                 Line::from("delete the old one."),
                 Line::from("Make new list?"),
             ];
+            window.render_widget(
+                Clear,
+                Rect {
+                    x: center_x,
+                    y: center_y,
+                    width: w,
+                    height: h,
+                },
+            );
 
             render::pop::are_you_sure(
                 window,
                 Rect {
                     x: center_x,
                     y: center_y,
-                    width: w + 5,
-                    height: h + 1,
+                    width: w,
+                    height: h,
                 },
                 app,
                 msg,
             );
         } else {
+            window.render_widget(
+                Clear,
+                Rect {
+                    x: center_x,
+                    y: center_y,
+                    width: w,
+                    height: h,
+                },
+            );
+
             render::new_list::new_list(
                 window,
                 Rect {
@@ -165,7 +186,7 @@ pub fn right(window: &mut Frame, rect: Rect, app: &mut app::App) {
         );
     }
 
-    if matches!(app.state, AppState::ShowListOfIngredients) {
+    if matches!(app.state, AppState::ShowShoppingList) {
         new_list::show_generated_list_ingredients(window, rect, app);
     }
 
