@@ -1,9 +1,10 @@
 use crate::items::{self, Category, Database, Dish};
 use crate::list;
+use crate::ui;
 use crate::ui::Cursor;
-use crate::ui::update_scroll;
 use crate::{db, items::Ingredient};
 use std::collections::HashMap;
+use std::fs;
 
 #[derive(Debug, PartialEq)]
 pub enum Space {
@@ -35,6 +36,7 @@ pub enum AppState {
 pub struct App {
     pub current_dish_list: Option<Vec<Dish>>,
     pub shopping_list: Vec<Ingredient>,
+    pub print_string: Option<String>,
     pub cursor: usize,
     pub db_cursor: Cursor,
     pub edit_cursor: Cursor,
@@ -56,6 +58,7 @@ impl App {
         App {
             current_dish_list: list::load(),
             shopping_list: list::load_shopping_list_config(),
+            print_string: None,
             cursor: 0,
 
             db_cursor: Cursor {
@@ -95,7 +98,8 @@ impl App {
             | AppState::EditingIngredient
             | AppState::EditingDishName
             | AppState::EditingAddIngredient
-            | AppState::NewList => {
+            | AppState::NewList
+            | AppState::AddToShoppingList => {
                 self.input.push(c);
             }
             _ => {}
@@ -108,7 +112,8 @@ impl App {
             | AppState::EnteringIngredients
             | AppState::EditingIngredient
             | AppState::EditingAddIngredient
-            | AppState::NewList => {
+            | AppState::NewList
+            | AppState::AddToShoppingList => {
                 self.input.pop();
             }
             _ => {}
@@ -166,6 +171,9 @@ impl App {
                 self.state = AppState::ShowShoppingList;
                 self.cursor = 1;
             }
+            AppState::AddToShoppingList => {
+                self.add_to_shopping_list();
+            }
             AppState::EnteringDishName => {
                 self.confirm_dish_name();
             }
@@ -221,6 +229,9 @@ impl App {
             } else {
                 self.state = AppState::Normal;
             }
+        } else if matches!(self.state, AppState::AddToShoppingList) {
+            self.state = AppState::ShowShoppingList;
+            self.input.clear();
         } else {
             self.state = AppState::Normal;
             self.selected_space = Space::MainLeft;
@@ -265,6 +276,35 @@ impl App {
         self.input.clear();
     }
 
+    fn add_to_shopping_list(&mut self) {
+        let found_category = self.find_category(self.input.clone());
+        let input = uppercase_words(&self.input.clone());
+        let seach_input = input.clone();
+
+        self.shopping_list.push(Ingredient {
+            name: input,
+            category: found_category,
+            frozen: false,
+        });
+
+        if found_category == Category::Misc {
+            self.prev_state = Some(self.state);
+            self.state = AppState::PickingCategory
+        }
+
+        self.input.clear();
+        self.shopping_list.sort_by_key(|i| i.category);
+
+        for (i, ing) in self.shopping_list.iter().enumerate() {
+            if ing.name == seach_input {
+                self.db_cursor.cursor = i;
+                ui::update_scroll(&mut self.db_cursor)
+            }
+        }
+
+        list::save_shopping_list_config(self.shopping_list.clone());
+    }
+
     fn edit_ingredient(&mut self) {
         let found_category = self.find_category(self.input.clone());
         let input = uppercase_words(&self.input.clone());
@@ -288,8 +328,10 @@ impl App {
 
     pub fn edit_add_ingredient(&mut self) {
         self.pending_dish = Some(self.db.dishes[self.db_cursor.cursor].clone());
+
         let input = uppercase_words(&self.input.clone());
         let found_category = self.find_category(input.clone());
+
         if let Some(pending_dish) = self.pending_dish.as_mut() {
             pending_dish.ingredients.push(Ingredient {
                 name: input,
@@ -299,7 +341,7 @@ impl App {
 
             self.db.dishes[self.db_cursor.cursor] = pending_dish.clone();
             self.edit_cursor.cursor = self.db.dishes[self.db_cursor.cursor].ingredients.len() - 1;
-            update_scroll(&mut self.edit_cursor);
+            ui::update_scroll(&mut self.edit_cursor);
             self.state = AppState::EditingDish
         }
         self.input.clear();
@@ -328,14 +370,14 @@ impl App {
     }
 
     fn delete_dish(&mut self) {
-        if self.db.dishes.len() == 0 {
+        if self.db.dishes.is_empty() {
             return;
         }
         self.db.dishes.remove(self.db_cursor.cursor);
 
         self.ays_cursor = 0;
 
-        if self.db_cursor.cursor == self.db.dishes.len() && self.db.dishes.len() > 0 {
+        if self.db_cursor.cursor == self.db.dishes.len() && !self.db.dishes.is_empty() {
             self.db_cursor.cursor -= 1;
         }
 
@@ -359,7 +401,7 @@ impl App {
                     }
 
                     if self.edit_cursor.cursor == pending_dish.ingredients.len()
-                        && pending_dish.ingredients.len() > 0
+                        && !pending_dish.ingredients.is_empty()
                     {
                         self.edit_cursor.cursor -= 1;
                     }
@@ -372,12 +414,11 @@ impl App {
             AppState::ShowShoppingList => {
                 if !self.shopping_list.is_empty() {
                     self.shopping_list.remove(self.db_cursor.cursor);
-                    if self.db_cursor.cursor == self.shopping_list.len()
-                        || self.db_cursor.cursor > self.shopping_list.len()
+                    if (self.db_cursor.cursor == self.shopping_list.len()
+                        || self.db_cursor.cursor > self.shopping_list.len())
+                        && !self.shopping_list.is_empty()
                     {
-                        if !self.shopping_list.is_empty() {
-                            self.db_cursor.cursor = self.shopping_list.len() - 1;
-                        }
+                        self.db_cursor.cursor = self.shopping_list.len() - 1;
                     }
                     if self.shopping_list.is_empty() {
                         self.current_dish_list = None
@@ -389,6 +430,24 @@ impl App {
             _ => {}
         }
     }
+
+    // fn find_category_for_shopping_list(&mut self) -> Category{
+    //     let chosen_category: Category;
+
+    //     match self.picking_cursor {
+    //         0 => chosen_category = Category::Misc,
+    //         1 => chosen_category = Category::Vegtables,
+    //         2 => chosen_category = Category::Fruit,
+    //         3 => chosen_category = Category::Dairy,
+    //         4 => chosen_category = Category::Protein,
+    //         5 => chosen_category = Category::DryGoods,
+    //         6 => chosen_category = Category::Spices,
+    //         _ => chosen_category = Category::Misc,
+    //     }
+
+    //     chosen_category
+
+    // }
 
     fn confim_category(&mut self) {
         let chosen_category: Category;
@@ -417,6 +476,22 @@ impl App {
             if prev_state == AppState::EditingDish {
                 self.db.dishes[self.db_cursor.cursor].ingredients[self.edit_cursor.cursor]
                     .category = chosen_category;
+            } else if prev_state == AppState::AddToShoppingList {
+                if let Some(mut i) = self.shopping_list.pop() {
+                    let search_input = i.name.clone();
+                    i.category = chosen_category;
+                    self.shopping_list.push(i);
+                    self.shopping_list.sort_by_key(|c| c.category);
+
+                    for (i, ing) in self.shopping_list.iter().enumerate() {
+                        if ing.name == search_input {
+                            self.db_cursor.cursor = i;
+                            ui::update_scroll(&mut self.db_cursor)
+                        }
+                    }
+
+                    list::save_shopping_list_config(self.shopping_list.clone());
+                }
             }
 
             self.state = prev_state;
@@ -478,7 +553,7 @@ impl App {
         }
 
         if let Some(c) = self.category_db.get(&look_up.to_lowercase()) {
-            return c.to_owned();
+            c.to_owned()
         } else {
             Category::Misc
         }
@@ -491,7 +566,7 @@ pub fn uppercase_words(data: &str) -> String {
     let mut first = true;
     for value in data.chars() {
         if first {
-            result.push(value.to_uppercase().nth(0).unwrap());
+            result.push(value.to_uppercase().next().unwrap());
             first = false;
         } else {
             result.push(value);
@@ -501,4 +576,89 @@ pub fn uppercase_words(data: &str) -> String {
         }
     }
     result
+}
+
+pub fn make_sh_txt_file(
+    shopping_list: Vec<Ingredient>,
+    wants_categories: bool,
+    wants_index: bool,
+) -> std::io::Result<()> {
+    let s = make_txt_string(shopping_list, wants_categories, wants_index);
+    fs::write("mah_shoppin.txt", s)?;
+    //fs::write("bar.txt", "dolor sit")?;
+    Ok(())
+}
+
+fn make_txt_string(shopping_list: Vec<Ingredient>, cat_option: bool, i_option: bool) -> String {
+    //let mut spans: Vec<String> = Vec::new();
+    let mut output = String::new();
+    let mut txt = String::new();
+    let mut prev_category = Category::Vegtables;
+    let mut veg_been_done = false;
+    let mut cs = 0;
+    let mut selected_cat: Category;
+
+    for (i, ing) in shopping_list.iter().enumerate() {
+        let mut space = "                         ".to_string();
+        // let c = i;
+        let i = i + 1;
+        selected_cat = ing.category;
+        
+        if i_option {
+            output.push_str(&i.to_string());
+            output.push_str(&". ".to_string());
+        }
+        
+        output.push_str(&ing.name.to_string());
+
+        for _ in ing.name.chars() {
+            space.pop();
+        }
+
+        if i > 9 {
+            space.pop();
+        }
+        if cat_option {
+            if ing.category != prev_category
+                || (prev_category == Category::Vegtables && !veg_been_done)
+            {
+                output.push_str(&space);
+                output.push_str(&ui::get_category_name(ing.category));
+            } else if ing.category == prev_category {
+                let cat_count = ui::get_category_name(prev_category).len();
+
+                while cs < cat_count {
+                    space.push(' ');
+                    cs += 1
+                }
+
+                if selected_cat == ing.category {
+                    space.pop();
+                }
+
+                let mut margin = "│";
+
+                if i < shopping_list.len() {
+                    let next_cat = shopping_list[i].category;
+                    if next_cat != ing.category {
+                        space.drain(..2);
+                        margin = "──┘";
+                    }
+                } else if i == shopping_list.len() {
+                    space.drain(..2);
+                    margin = "──┘";
+                }
+
+                output.push_str(&space);
+                output.push_str(margin);
+            }
+        }
+        cs = 0;
+        prev_category = ing.category;
+        veg_been_done = true;
+        output.push('\n');
+        txt.push_str(&output.clone());
+        output.clear();
+    }
+    txt
 }

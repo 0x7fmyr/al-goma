@@ -1,4 +1,98 @@
 [[dishes]]
+name = "Köttgryta"
+
+[[dishes.ingredients]]
+name = "Morötter"
+category = "Vegtables"
+frozen = false
+
+[[dishes.ingredients]]
+name = "Kålrot"
+category = "Vegtables"
+frozen = false
+
+[[dishes.ingredients]]
+name = "Potatis"
+category = "Vegtables"
+frozen = false
+
+[[dishes.ingredients]]
+name = "Buljong"
+category = "DryGoods"
+frozen = false
+
+[[dishes.ingredients]]
+name = "Öl"
+category = "DryGoods"
+frozen = false
+
+[[dishes.ingredients]]
+name = "Ris"
+category = "DryGoods"
+frozen = false
+
+[[dishes.ingredients]]
+name = "Vitt Vin"
+category = "DryGoods"
+frozen = false
+
+[[dishes.ingredients]]
+name = "Kött"
+category = "Misc"
+frozen = false
+
+[[dishes]]
+name = "Pannkakor"
+
+[[dishes.ingredients]]
+name = "Mjölk"
+category = "Dairy"
+frozen = false
+
+[[dishes.ingredients]]
+name = "Ägg"
+category = "Dairy"
+frozen = false
+
+[[dishes.ingredients]]
+name = "Smör"
+category = "Dairy"
+frozen = false
+
+[[dishes.ingredients]]
+name = "Vetemjöl"
+category = "DryGoods"
+frozen = false
+
+[[dishes]]
+name = "Lök"
+
+[[dishes.ingredients]]
+name = "Gul Lök"
+category = "Vegtables"
+frozen = false
+
+[[dishes.ingredients]]
+name = "Gul Lök"
+category = "Vegtables"
+frozen = false
+
+[[dishes.ingredients]]
+name = "Gul Lök"
+category = "Vegtables"
+frozen = false
+
+[[dishes.ingredients]]
+name = "Gullök"
+category = "Vegtables"
+frozen = false
+
+[[dishes.ingredients]]
+name = "Gullök"
+category = "Vegtables"
+frozen = false
+
+[[dishes]]
 name = "Löksoppa"
 
 [[dishes.ingredients]]
@@ -23,6 +117,44 @@ frozen = false
 
 [[dishes.ingredients]]
 name = "Baugette"
+category = "DryGoods"
+frozen = false
+
+[[dishes]]
+name = "Tacos Chorropapa"
+
+[[dishes.ingredients]]
+name = "Gullök"
+category = "Vegtables"
+frozen = false
+
+[[dishes.ingredients]]
+name = "Tomat"
+category = "Vegtables"
+frozen = false
+
+[[dishes.ingredients]]
+name = "Lök"
+category = "Vegtables"
+frozen = false
+
+[[dishes.ingredients]]
+name = "Jalapeno"
+category = "Vegtables"
+frozen = false
+
+[[dishes.ingredients]]
+name = "Chorizo"
+category = "Protein"
+frozen = false
+
+[[dishes.ingredients]]
+name = "Tortilla"
+category = "DryGoods"
+frozen = false
+
+[[dishes.ingredients]]
+name = "Olja"
 category = "DryGoods"
 frozen = false
 
@@ -61,6 +193,115 @@ frozen = false
 
 [[dishes.ingredients]]
 name = "Krossade Tomater"
+category = "DryGoods"
+frozen = false
+
+[[dishes]]
+name = "Citron Pasta"
+
+[[dishes.ingredients]]
+name = "Citroner"
+category = "Fruit"
+frozen = false
+
+[[dishes.ingredients]]
+name = "Parmesan"
+category = "Dairy"
+frozen = false
+
+[[dishes.ingredients]]
+name = "Havregrädde"
+category = "Dairy"
+frozen = false
+
+[[dishes.ingredients]]
+name = "Spagetti"
+category = "DryGoods"
+frozen = false
+
+[[dishes.ingredients]]
+name = "Fond"
+category = "DryGoods"
+frozen = false
+
+[[dishes.ingredients]]
+name = "Vitt Vin"
+category = "DryGoods"
+frozen = false
+
+[[dishes]]
+name = "Pyttipanna"
+
+[[dishes.ingredients]]
+name = "Mjölk"
+category = "Dairy"
+frozen = false
+
+[[dishes.ingredients]]
+name = "Ägg"
+category = "Dairy"
+frozen = false
+
+[[dishes.ingredients]]
+name = "Smör"
+category = "Dairy"
+frozen = false
+
+[[dishes.ingredients]]
+name = "Vetemjöl"
+category = "DryGoods"
+frozen = false
+
+[[dishes.ingredients]]
+name = "Salt"
+category = "Spices"
+frozen = false
+
+[[dishes]]
+name = "Grönsakssoppa"
+
+[[dishes.ingredients]]
+name = "Potatis"
+category = "Vegtables"
+frozen = false
+
+[[dishes.ingredients]]
+name = "Morötter"
+category = "Vegtables"
+frozen = false
+
+[[dishes.ingredients]]
+name = "Zucchini"
+category = "Vegtables"
+frozen = false
+
+[[dishes.ingredients]]
+name = "Vitkål"
+category = "Vegtables"
+frozen = false
+
+[[dishes.ingredients]]
+name = "Något Kött Med Ben"
+category = "Protein"
+frozen = false
+
+[[dishes.ingredients]]
+name = "Buljong"
+category = "DryGoods"
+frozen = false
+
+[[dishes.ingredients]]
+name = "Ris"
+category = "DryGoods"
+frozen = false
+
+[[dishes.ingredients]]
+name = "Koriander"
+category = "Spices"
+frozen = false
+
+[[dishes.ingredients]]
+name = "Vitt Vin"
 category = "DryGoods"
 frozen = false
 
@@ -110,52 +351,4 @@ frozen = false
 [[dishes.ingredients]]
 name = "Chorizo"
 category = "Protein"
-frozen = false
-
-[[dishes]]
-name = "Köttgryta"
-
-[[dishes.ingredients]]
-name = "Morötter"
-category = "Vegtables"
-frozen = false
-
-[[dishes.ingredients]]
-name = "Kålrot"
-category = "Vegtables"
-frozen = false
-
-[[dishes.ingredients]]
-name = "Potatis"
-category = "Vegtables"
-frozen = false
-
-[[dishes.ingredients]]
-name = "Buljong"
-category = "DryGoods"
-frozen = false
-
-[[dishes.ingredients]]
-name = "Öl"
-category = "DryGoods"
-frozen = false
-
-[[dishes.ingredients]]
-name = "Ris"
-category = "DryGoods"
-frozen = false
-
-[[dishes.ingredients]]
-name = "Vitt Vin"
-category = "DryGoods"
-frozen = false
-
-[[dishes.ingredients]]
-name = "Kött"
-category = "Misc"
-frozen = false
-
-[[dishes.ingredients]]
-name = "Beacon"
-category = "Misc"
 frozen = false

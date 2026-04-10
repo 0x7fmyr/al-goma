@@ -324,3 +324,31 @@ frozen = false
 name = "Vitt Vin"
 category = "DryGoods"
 frozen = false
+
+[[dishes]]
+name = "Lök"
+
+[[dishes.ingredients]]
+name = "Gul Lök"
+category = "Vegtables"
+frozen = false
+
+[[dishes.ingredients]]
+name = "Gul Lök"
+category = "Vegtables"
+frozen = false
+
+[[dishes.ingredients]]
+name = "Gul Lök"
+category = "Vegtables"
+frozen = false
+
+[[dishes.ingredients]]
+name = "Gullök"
+category = "Vegtables"
+frozen = false
+
+[[dishes.ingredients]]
+name = "Gullök"
+category = "Vegtables"
+frozen = false

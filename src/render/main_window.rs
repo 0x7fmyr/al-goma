@@ -3,14 +3,12 @@ use ratatui::prelude::Direction;
 use ratatui::style::{Color, Modifier, Style, Stylize};
 use ratatui::text::{Line, Span};
 use ratatui::widgets::Clear;
-use ratatui::widgets::{
-    Block, BorderType::Rounded, Borders, Paragraph, Scrollbar, ScrollbarOrientation, ScrollbarState,
-};
+use ratatui::widgets::{Block, BorderType::Rounded, Borders, Paragraph};
 use ratatui::{Frame, layout::Rect};
 
 use super::db;
 use super::pop;
-use crate::app::{self, AppState, Space};
+use crate::app::{self, App, AppState, Space};
 use crate::render::{self, new_list};
 
 pub fn left(window: &mut Frame, rect: Rect, app: &mut app::App) {
@@ -104,7 +102,7 @@ pub fn right(window: &mut Frame, rect: Rect, app: &mut app::App) {
         let mut h: u16 = 10;
         let center_y = rect.y + (rect.height / 2) - (h / 2);
         let center_x = rect.x + (rect.width / 2) - (w / 2);
-        // todo clear
+
         if matches!(app.state, AppState::ReplaceList) {
             w += 5;
             h += 1;
@@ -186,8 +184,56 @@ pub fn right(window: &mut Frame, rect: Rect, app: &mut app::App) {
         );
     }
 
-    if matches!(app.state, AppState::ShowShoppingList) {
+    if matches!(app.state, AppState::ShowShoppingList)
+        || matches!(app.state, AppState::AddToShoppingList)
+        || (matches!(app.state, AppState::PickingCategory)
+            && prev_state == AppState::AddToShoppingList)
+    {
         new_list::show_generated_list_ingredients(window, rect, app);
+
+        if matches!(app.state, AppState::PickingCategory) {
+            let mut input_w: u16 = 38;
+            let mut input_h: u16 = 14;
+            let center_y: u16;
+            let center_x: u16;
+
+            if rect.height >= 40 || rect.width >= 40 {
+                center_y = rect.y + (rect.height / 2) - (input_h / 2);
+                center_x = rect.x + (rect.width / 2) - (input_w / 2);
+            } else {
+                center_y = 0;
+                center_x = 0;
+                input_h = 0;
+                input_w = 0;
+            }
+
+            window.render_widget(
+                Clear,
+                Rect {
+                    x: center_x,
+                    y: center_y,
+                    width: input_w,
+                    height: input_h,
+                    
+                },
+            );
+
+            
+            let i_name = app.shopping_list.last().unwrap().name.clone();
+            
+            pop::pick_category(
+                window,
+                Rect {
+                    x: center_x,
+                    y: center_y,
+                    width: input_w,
+                    height: input_h,
+                },
+                app,
+                prev_state,
+                i_name,
+            );
+        }
     }
 
     if matches!(app.state, AppState::EnteringDishName)
@@ -297,6 +343,15 @@ pub fn right(window: &mut Frame, rect: Rect, app: &mut app::App) {
                     },
                     app,
                     prev_state,
+                    app
+                        .pending_dish
+                        .as_ref()
+                        .unwrap()
+                        .ingredients
+                        .last()
+                        .unwrap()
+                        .name
+                        .clone()
                 );
             }
         }
@@ -327,7 +382,7 @@ pub fn right(window: &mut Frame, rect: Rect, app: &mut app::App) {
                 },
             );
 
-            let deleting_name = String::from(app.db.dishes[app.db_cursor.cursor].name.clone());
+            let deleting_name = app.db.dishes[app.db_cursor.cursor].name.clone();
             let msg = vec![
                 Line::from(format!("Deleting: {}", deleting_name)),
                 Line::from(""),
@@ -377,6 +432,7 @@ pub fn right(window: &mut Frame, rect: Rect, app: &mut app::App) {
     if matches!(app.state, AppState::EnteringIngredients)
         || matches!(app.state, AppState::EditingIngredient)
         || matches!(app.state, AppState::EditingAddIngredient)
+        || matches!(app.state, AppState::AddToShoppingList)
     {
         window.render_widget(
             Clear,

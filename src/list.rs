@@ -1,4 +1,4 @@
-use crate::app::{App, AppState, Space};
+use crate::app::{App, AppState};
 use crate::items::{Database, Dish, Ingredient};
 use std::collections::HashSet;
 use std::fs;
@@ -15,7 +15,7 @@ impl App {
             }
         }
         let mut number_of_dishes: usize;
-        if self.input.len() > 0 {
+        if !self.input.is_empty() {
             number_of_dishes = self.input.parse::<usize>().unwrap();
         } else {
             self.state = AppState::Normal;
@@ -67,10 +67,8 @@ impl App {
                     continue;
                 }
 
-                for i in list.iter() {
-                    if *i == rand_dish {
-                        continue;
-                    }
+                if list.iter().any(|d| *d == rand_dish) {
+                    continue;
                 }
 
                 list[selected_dish] = self.db.dishes[i].clone();
@@ -126,18 +124,6 @@ pub fn load_shopping_list_config() -> Vec<Ingredient> {
 
     list_load.items
 }
-
-// pub fn init_shopping_list(list: Option<Vec<Dish>>) -> Vec<Ingredient> {
-//     let mut shopping_list: Vec<Ingredient> = Vec::new();
-//     if let Some(dishes) = list {
-//         for i in dishes.iter() {
-//             for x in i.ingredients.clone() {
-//                 shopping_list.push(x);
-//             }
-//         }
-//     }
-//     shopping_list
-// }
 
 pub fn load() -> Option<Vec<Dish>> {
     let contents = match fs::read_to_string("list.toml") {

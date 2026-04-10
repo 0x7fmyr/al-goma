@@ -111,7 +111,7 @@ pub fn edit_widow(window: &mut Frame, rect: Rect, app: &mut app::App) {
         }
 
         items.push(Span::styled(
-            format!(" [{}]", ui::get_category_name(i.category.clone())),
+            format!(" [{}]", ui::get_category_name(i.category)),
             Style::new().fg(Color::DarkGray),
         ));
 
@@ -242,6 +242,14 @@ pub fn add_dish(window: &mut Frame, rect: Rect, app: &mut app::App, prev_state: 
             },
             app,
             prev_state,
+            app.pending_dish
+                .as_ref()
+                .unwrap()
+                .ingredients
+                .last()
+                .unwrap()
+                .name
+                .clone(),
         );
     }
 }

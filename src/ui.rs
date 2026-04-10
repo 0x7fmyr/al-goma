@@ -90,11 +90,10 @@ impl App {
                     self.picking_cursor += 1
                 }
                 AppState::ShowGeneratedList => {
-                    if let Some(list) = self.current_dish_list.as_ref() {
-                        if self.edit_cursor.cursor < list.len() - 1 {
+                    if let Some(list) = self.current_dish_list.as_ref()
+                        && self.edit_cursor.cursor < list.len() - 1 {
                             self.edit_cursor.cursor += 1;
                         }
-                    }
                 }
                 _ => {}
             },

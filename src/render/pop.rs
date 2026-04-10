@@ -83,7 +83,13 @@ pub fn are_you_sure(window: &mut Frame, rect: Rect, app: &mut app::App, msg: Vec
     );
 }
 
-pub fn pick_category(window: &mut Frame, rect: Rect, app: &mut app::App, s: AppState) {
+pub fn pick_category(
+    window: &mut Frame,
+    rect: Rect,
+    app: &mut app::App,
+    s: AppState,
+    name: String,
+) {
     let pick_window = Layout::default()
         .direction(Direction::Vertical)
         .constraints([Constraint::Length(4), Constraint::Fill(1)])
@@ -92,20 +98,10 @@ pub fn pick_category(window: &mut Frame, rect: Rect, app: &mut app::App, s: AppS
             vertical: 1,
         }));
 
-    let i = app
-        .pending_dish
-        .as_ref()
-        .unwrap()
-        .ingredients
-        .last()
-        .unwrap()
-        .name
-        .clone();
-
-    if s == AppState::EnteringIngredients {
+    if s == AppState::EnteringIngredients || s == AppState::AddToShoppingList {
         let msg = vec![
             Line::from("I can't find a category for:"),
-            Line::from(app::uppercase_words(&i)).add_modifier(Modifier::BOLD),
+            Line::from(app::uppercase_words(&name)).add_modifier(Modifier::BOLD),
             Line::from("Please choose one:"),
         ];
         window.render_widget(
@@ -129,7 +125,7 @@ pub fn pick_category(window: &mut Frame, rect: Rect, app: &mut app::App, s: AppS
         );
     }
 
-    let categories = vec![
+    let categories = [
         "Annat",
         "Grönsaker",
         "Frukt",

@@ -15,7 +15,7 @@ use ratatui::prelude::CrosstermBackend;
 use std::error::Error;
 use std::io::stdout;
 
-use crate::app::AppState;
+use crate::app::{AppState, make_sh_txt_file};
 
 mod app;
 mod db;
@@ -117,69 +117,75 @@ fn run(
                 render::main_window::right(window, chunks[2], app);
             }
         })?;
-        if event::poll(std::time::Duration::from_millis(16))? {
-            if let Event::Key(key) = event::read()? {
-                match key {
-                    //mod presses
-                    KeyEvent {
-                        code: KeyCode::Char('s'),
-                        modifiers: KeyModifiers::CONTROL,
-                        ..
-                    } => {
-                        if app.pending_dish.is_some() {
-                            app.push_dish_to_db()
-                        }
+        if event::poll(std::time::Duration::from_millis(16))?
+            && let Event::Key(key) = event::read()?
+        {
+            match key {
+                //mod presses
+                KeyEvent {
+                    code: KeyCode::Char('s'),
+                    modifiers: KeyModifiers::CONTROL,
+                    ..
+                } => {
+                    if app.pending_dish.is_some() {
+                        app.push_dish_to_db()
                     }
-                    KeyEvent {
-                        code: KeyCode::Char('n'),
-                        modifiers: KeyModifiers::CONTROL,
-                        ..
-                    } => {
-                        app.state = app::AppState::EditingDishName;
-                        app.pending_dish = Some(app.db.dishes[app.db_cursor.cursor].to_owned());
-                    }
-                    KeyEvent {
-                        code: KeyCode::Char('a'),
-                        modifiers: KeyModifiers::CONTROL,
-                        ..
-                    } => {
-                        if app.state == AppState::EditingDish {
-                            app.state = AppState::EditingAddIngredient;
-                        } else if app.state == AppState::ShowShoppingList {
-                            app.state = AppState::AddToShoppingList
-                        }
-                    }
-                    KeyEvent {
-                        code: KeyCode::Char('k'),
-                        modifiers: KeyModifiers::CONTROL,
-                        ..
-                    } => {
-                        if app.state == AppState::EditingDish {
-                            app.pending_dish = Some(app.db.dishes[app.db_cursor.cursor].clone());
-                            app.prev_state = Some(app.state);
-                            app.state = AppState::PickingCategory;
-                        }
-                    }
-                    //plain keypresses
-                    KeyEvent { code, .. } => match code {
-                        KeyCode::Char('q') => {
-                            break;
-                        }
-                        KeyCode::Esc => app.handle_esc(),
-                        KeyCode::Down => app.move_cursor_down(),
-                        KeyCode::Up => app.move_cursor_up(),
-                        KeyCode::Left => app.move_focus_left(),
-                        KeyCode::Right => app.move_focus_right(),
-
-                        KeyCode::Char(c) => app.keyboard_input(c),
-                        KeyCode::Backspace => app.backspace(),
-                        KeyCode::Delete => app.handle_delete(),
-
-                        KeyCode::Enter => app.handle_enter(),
-
-                        _ => {}
-                    },
                 }
+                KeyEvent {
+                    code: KeyCode::Char('n'),
+                    modifiers: KeyModifiers::CONTROL,
+                    ..
+                } => {
+                    app.state = app::AppState::EditingDishName;
+                    app.pending_dish = Some(app.db.dishes[app.db_cursor.cursor].to_owned());
+                }
+                KeyEvent {
+                    code: KeyCode::Char('a'),
+                    modifiers: KeyModifiers::CONTROL,
+                    ..
+                } => {
+                    if app.state == AppState::EditingDish {
+                        app.state = AppState::EditingAddIngredient;
+                    } else if app.state == AppState::ShowShoppingList {
+                        app.state = AppState::AddToShoppingList
+                    }
+                }
+                KeyEvent {
+                    code: KeyCode::Char('k'),
+                    modifiers: KeyModifiers::CONTROL,
+                    ..
+                } => {
+                    if app.state == AppState::EditingDish {
+                        app.pending_dish = Some(app.db.dishes[app.db_cursor.cursor].clone());
+                        app.prev_state = Some(app.state);
+                        app.state = AppState::PickingCategory;
+                    }
+                }
+                KeyEvent {
+                    code: KeyCode::Char('p'),
+                    modifiers: KeyModifiers::CONTROL,
+                    ..
+                } => make_sh_txt_file(app.shopping_list.clone(), true, true)
+                    .expect("failed to write shopping list"),
+                //plain keypresses
+                KeyEvent { code, .. } => match code {
+                    KeyCode::Char('q') => {
+                        break;
+                    }
+                    KeyCode::Esc => app.handle_esc(),
+                    KeyCode::Down => app.move_cursor_down(),
+                    KeyCode::Up => app.move_cursor_up(),
+                    KeyCode::Left => app.move_focus_left(),
+                    KeyCode::Right => app.move_focus_right(),
+
+                    KeyCode::Char(c) => app.keyboard_input(c),
+                    KeyCode::Backspace => app.backspace(),
+                    KeyCode::Delete => app.handle_delete(),
+
+                    KeyCode::Enter => app.handle_enter(),
+
+                    _ => {}
+                },
             }
         }
     }

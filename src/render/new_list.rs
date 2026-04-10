@@ -92,8 +92,6 @@ pub fn show_generated_list(window: &mut Frame, rect: Rect, app: &mut app::App) {
             vertical: 1,
         }));
 
-    // app.edit_visible = edit_items[1].height as usize;
-
     window.render_widget(
         Paragraph::default().alignment(Alignment::Left).block(
             Block::bordered()
@@ -248,7 +246,7 @@ pub fn show_generated_list_ingredients(window: &mut Frame, rect: Rect, app: &mut
     let mut selected_cat: Category;
 
     for (i, ing) in app.shopping_list.iter().enumerate() {
-        let mut space = "                             ".to_string();
+        let mut space = "                         ".to_string();
         let c = i;
         let i = i + 1;
         selected_cat = ing.category;
@@ -323,7 +321,13 @@ pub fn show_generated_list_ingredients(window: &mut Frame, rect: Rect, app: &mut
         if ing.category != prev_category || (prev_category == Category::Vegtables && !veg_been_done)
         {
             spans.push(Span::raw(space));
-            spans.push(Span::raw(ui::get_category_name(ing.category)));
+            spans.push(
+                Span::styled(
+                    ui::get_category_name(ing.category),
+                    Style::new().fg(Color::DarkGray),
+                )
+                .add_modifier(Modifier::BOLD),
+            );
         } else if ing.category == prev_category {
             let cat_count = ui::get_category_name(prev_category).len();
 
