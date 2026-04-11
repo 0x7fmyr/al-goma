@@ -97,7 +97,8 @@ pub fn save_list(list: Option<Vec<Dish>>) {
     if let Some(save_list) = list {
         let save_file = Database { dishes: save_list };
         let contents = toml::to_string(&save_file).expect("failed to serialize...");
-        fs::write("list.toml", contents).expect("failed to write file...")
+        fs::create_dir_all(".config/").expect("failed to make dir: .config");
+        fs::write(".config/list.toml", contents).expect("failed to write file...")
     }
 }
 
@@ -112,11 +113,13 @@ pub fn save_shopping_list_config(shopping_list: Vec<Ingredient>) {
     };
 
     let contents = toml::to_string(&save_file).expect("failed to serialize...");
-    fs::write("sh_list.toml", contents).expect("failed to write file...")
+
+    fs::create_dir_all(".config/").expect("failed to make dir: .config");
+    fs::write(".config/sh_list.toml", contents).expect("failed to write file...")
 }
 
 pub fn load_shopping_list_config() -> Vec<Ingredient> {
-    let contents = match fs::read_to_string("sh_list.toml") {
+    let contents = match fs::read_to_string(".config/sh_list.toml") {
         Ok(s) => s,
         Err(_) => return vec![],
     };
@@ -126,7 +129,7 @@ pub fn load_shopping_list_config() -> Vec<Ingredient> {
 }
 
 pub fn load() -> Option<Vec<Dish>> {
-    let contents = match fs::read_to_string("list.toml") {
+    let contents = match fs::read_to_string(".config/list.toml") {
         Ok(s) => s,
         Err(_) => return None,
     };

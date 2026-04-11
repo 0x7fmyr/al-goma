@@ -603,14 +603,16 @@ pub fn print_shopping_list_txt_file(
 ) -> std::io::Result<()> {
     let s = make_txt_string(shopping_list, wants_categories, wants_index);
     let date = Utc::now().date_naive();
-    let mut file_name = String::from(format!("Shopping_List-{}.txt", date));
+    let mut file_name = String::from(format!("Shopping-Lists/Shopping_List-{}.txt", date));
+
+    fs::create_dir_all("Shopping-Lists/")?;
 
     if fs::exists(file_name.clone()).unwrap() {
         let mut i = 2;
-        file_name = format!("Shopping_List-{}({}).txt", date, i);
+        file_name = format!("Shopping-Lists/Shopping_List-{}({}).txt", date, i);
         while fs::exists(file_name.clone()).unwrap() {
             i += 1;
-            file_name = format!("Shopping_List-{}({}).txt", date, i);
+            file_name = format!("Shopping-Lists/Shopping_List-{}({}).txt", date, i);
         }
     }
 
