@@ -15,7 +15,7 @@ use ratatui::prelude::CrosstermBackend;
 use std::error::Error;
 use std::io::stdout;
 
-use crate::app::{AppState, make_sh_txt_file};
+use crate::app::AppState;
 
 mod app;
 mod db;
@@ -165,14 +165,24 @@ fn run(
                     code: KeyCode::Char('p'),
                     modifiers: KeyModifiers::CONTROL,
                     ..
-                } => make_sh_txt_file(app.shopping_list.clone(), true, true)
-                    .expect("failed to write shopping list"),
+                } => app.state = AppState::PromptPrint,
                 //plain keypresses
                 KeyEvent { code, .. } => match code {
                     KeyCode::Char('q') => {
                         break;
                     }
                     KeyCode::Esc => app.handle_esc(),
+                    KeyCode::Char('p') => {
+                        if matches!(app.state, AppState::PromptPrint) {
+                            app::print_shopping_list_txt_file(
+                                app.shopping_list.clone(),
+                                app.text_options.0,
+                                app.text_options.1,
+                            )
+                            .expect("failed to print file..");
+                            app.state = AppState::ShowShoppingList
+                        }
+                    }
                     KeyCode::Down => app.move_cursor_down(),
                     KeyCode::Up => app.move_cursor_up(),
                     KeyCode::Left => app.move_focus_left(),

@@ -85,6 +85,10 @@ pub fn right(window: &mut Frame, rect: Rect, app: &mut app::App) {
         AppState::ShowShoppingList => {
             tooltip = "[del] remove   [ctrl+a] add   [ctrl+p] print txt   [esc] cancel".to_string();
         }
+        AppState::PromptPrint => {
+            tooltip = "[up/down] select   [enter] confirm   [p] print   [esc] cancel".to_string();
+
+        }
         _ => {}
     }
 
@@ -188,6 +192,7 @@ pub fn right(window: &mut Frame, rect: Rect, app: &mut app::App) {
         || matches!(app.state, AppState::AddToShoppingList)
         || (matches!(app.state, AppState::PickingCategory)
             && prev_state == AppState::AddToShoppingList)
+        || matches!(app.state, AppState::PromptPrint)
     {
         new_list::show_generated_list_ingredients(window, rect, app);
 
@@ -214,13 +219,11 @@ pub fn right(window: &mut Frame, rect: Rect, app: &mut app::App) {
                     y: center_y,
                     width: input_w,
                     height: input_h,
-                    
                 },
             );
 
-            
             let i_name = app.shopping_list.last().unwrap().name.clone();
-            
+
             pop::pick_category(
                 window,
                 Rect {
@@ -233,6 +236,48 @@ pub fn right(window: &mut Frame, rect: Rect, app: &mut app::App) {
                 prev_state,
                 i_name,
             );
+        }
+        
+        if matches!(app.state, AppState::PromptPrint) {
+            let mut input_w: u16 = 38;
+            let mut input_h: u16 = 10;
+            let center_y: u16;
+            let center_x: u16;
+
+            if rect.height >= 14 || rect.width >= 38 {
+                center_y = rect.y + (rect.height / 2) - (input_h / 2);
+                center_x = rect.x + (rect.width / 2) - (input_w / 2);
+            } else {
+                center_y = 0;
+                center_x = 0;
+                input_h = 0;
+                input_w = 0;
+            }
+            // todo: work!
+            
+            window.render_widget(
+                Clear,
+                Rect {
+                    x: center_x,
+                    y: center_y,
+                    width: input_w,
+                    height: input_h,
+                },
+            );
+             
+            pop::print_txt_options(
+                window,
+                Rect {
+                    x: center_x,
+                    y: center_y,
+                    width: input_w,
+                    height: input_h,
+                },
+                app,
+                prev_state,
+            );
+            
+            
         }
     }
 
@@ -294,6 +339,7 @@ pub fn right(window: &mut Frame, rect: Rect, app: &mut app::App) {
                     height: input_h,
                 },
             );
+            
             if rect.height > 12 {
                 db::edit_widow(
                     window,
@@ -343,15 +389,14 @@ pub fn right(window: &mut Frame, rect: Rect, app: &mut app::App) {
                     },
                     app,
                     prev_state,
-                    app
-                        .pending_dish
+                    app.pending_dish
                         .as_ref()
                         .unwrap()
                         .ingredients
                         .last()
                         .unwrap()
                         .name
-                        .clone()
+                        .clone(),
                 );
             }
         }

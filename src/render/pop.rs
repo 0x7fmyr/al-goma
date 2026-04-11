@@ -195,3 +195,81 @@ pub fn input_box(window: &mut Frame, rect: Rect, app: &mut app::App, title_msg: 
         rect,
     );
 }
+
+pub fn print_txt_options(window: &mut Frame, rect: Rect, app: &mut app::App, s: AppState) {
+    let option_window = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints([
+            Constraint::Fill(1),
+            Constraint::Fill(1),
+            Constraint::Fill(1),
+        ])
+        .split(rect);
+
+    let text = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints([Constraint::Length(2), Constraint::Length(2)])
+        .split(option_window[1]);
+
+    let options_text = Layout::default()
+        .direction(Direction::Horizontal)
+        .constraints([
+            Constraint::Fill(1),
+            Constraint::Length(14),
+            Constraint::Fill(1),
+        ])
+        .split(text[1]);
+
+    window.render_widget(
+        Paragraph::default().block(
+            Block::bordered()
+                .border_style(Style::default().fg(Color::LightBlue))
+                .border_type(Rounded)
+                .borders(Borders::ALL)
+                .title("Print txt")
+                .title_alignment(Alignment::Center),
+        ),
+        rect,
+    );
+
+    window.render_widget(
+        Paragraph::new("Check if you want:").alignment(Alignment::Center),
+        text[0],
+    );
+
+    let mut options = ["[ ] Numbers", "[ ] Categories"];
+
+    if app.text_options.0 == true {
+        options[0] = "[x] Numbers"
+    }
+
+    if app.text_options.1 == true {
+        options[1] = "[x] Categories"
+    }
+
+    let mut grey_options = vec![
+        Line::from(Span::styled(options[0], Style::new().fg(Color::DarkGray))),
+        Line::from(Span::styled(options[1], Style::new().fg(Color::DarkGray))),
+    ];
+
+    if app.ays_cursor == 0 {
+        grey_options[0] = Line::from(Span::styled(
+            options[0],
+            Style::new()
+                .fg(Color::LightBlue)
+                .add_modifier(Modifier::BOLD),
+        ));
+    } else {
+        grey_options[1] = Line::from(Span::styled(
+            options[1],
+            Style::new()
+                .fg(Color::LightBlue)
+                .add_modifier(Modifier::BOLD),
+        ))
+    }
+
+    window.render_widget(
+        Paragraph::new(grey_options).alignment(Alignment::Left),
+        options_text[1],
+    );
+}

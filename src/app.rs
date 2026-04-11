@@ -3,6 +3,7 @@ use crate::list;
 use crate::ui;
 use crate::ui::Cursor;
 use crate::{db, items::Ingredient};
+use chrono::{DateTime, Datelike, Utc};
 use std::collections::HashMap;
 use std::fs;
 
@@ -30,13 +31,14 @@ pub enum AppState {
     ShowGeneratedList,
     ShowShoppingList,
     AddToShoppingList,
+    PromptPrint,
 }
 
 #[derive(Debug)]
 pub struct App {
     pub current_dish_list: Option<Vec<Dish>>,
     pub shopping_list: Vec<Ingredient>,
-    pub print_string: Option<String>,
+    pub text_options: (bool, bool),
     pub cursor: usize,
     pub db_cursor: Cursor,
     pub edit_cursor: Cursor,
@@ -58,7 +60,7 @@ impl App {
         App {
             current_dish_list: list::load(),
             shopping_list: list::load_shopping_list_config(),
-            print_string: None,
+            text_options: (false, false),
             cursor: 0,
 
             db_cursor: Cursor {
@@ -173,6 +175,22 @@ impl App {
             }
             AppState::AddToShoppingList => {
                 self.add_to_shopping_list();
+            }
+            AppState::PromptPrint => {
+                if self.ays_cursor == 0 {
+                    if self.text_options.0 == false {
+                        self.text_options.0 = true
+                    } else {
+                        self.text_options.0 = false
+                    }
+                }
+                if self.ays_cursor == 1 {
+                    if self.text_options.1 == false {
+                        self.text_options.1 = true
+                    } else {
+                        self.text_options.1 = false
+                    }
+                }
             }
             AppState::EnteringDishName => {
                 self.confirm_dish_name();
@@ -578,19 +596,30 @@ pub fn uppercase_words(data: &str) -> String {
     result
 }
 
-pub fn make_sh_txt_file(
+pub fn print_shopping_list_txt_file(
     shopping_list: Vec<Ingredient>,
-    wants_categories: bool,
     wants_index: bool,
+    wants_categories: bool,
 ) -> std::io::Result<()> {
     let s = make_txt_string(shopping_list, wants_categories, wants_index);
-    fs::write("mah_shoppin.txt", s)?;
-    //fs::write("bar.txt", "dolor sit")?;
+    let date = Utc::now().date_naive();
+    let mut file_name = String::from(format!("Shopping_List-{}.txt", date));
+
+    if fs::exists(file_name.clone()).unwrap() {
+        let mut i = 2;
+        file_name = format!("Shopping_List-{}({}).txt", date, i);
+        while fs::exists(file_name.clone()).unwrap() {
+            i += 1;
+            file_name = format!("Shopping_List-{}({}).txt", date, i);
+        }
+    }
+
+    fs::write(file_name, s)?;
+
     Ok(())
 }
 
 fn make_txt_string(shopping_list: Vec<Ingredient>, cat_option: bool, i_option: bool) -> String {
-    //let mut spans: Vec<String> = Vec::new();
     let mut output = String::new();
     let mut txt = String::new();
     let mut prev_category = Category::Vegtables;
@@ -600,24 +629,26 @@ fn make_txt_string(shopping_list: Vec<Ingredient>, cat_option: bool, i_option: b
 
     for (i, ing) in shopping_list.iter().enumerate() {
         let mut space = "                         ".to_string();
-        // let c = i;
         let i = i + 1;
         selected_cat = ing.category;
-        
+
         if i_option {
             output.push_str(&i.to_string());
             output.push_str(&". ".to_string());
         }
-        
+
         output.push_str(&ing.name.to_string());
 
         for _ in ing.name.chars() {
             space.pop();
         }
 
-        if i > 9 {
-            space.pop();
+        if i_option {
+            if i > 9 {
+                space.pop();
+            }
         }
+
         if cat_option {
             if ing.category != prev_category
                 || (prev_category == Category::Vegtables && !veg_been_done)

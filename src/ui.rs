@@ -36,7 +36,10 @@ impl App {
     }
 
     pub fn move_cursor_down(&mut self) {
-        if self.state == AppState::AreYouSureDelDish || self.state == AppState::ReplaceList {
+        if self.state == AppState::AreYouSureDelDish
+            || self.state == AppState::ReplaceList
+            || self.state == AppState::PromptPrint
+        {
             self.ays_cursor = 1;
             return;
         }
@@ -91,9 +94,10 @@ impl App {
                 }
                 AppState::ShowGeneratedList => {
                     if let Some(list) = self.current_dish_list.as_ref()
-                        && self.edit_cursor.cursor < list.len() - 1 {
-                            self.edit_cursor.cursor += 1;
-                        }
+                        && self.edit_cursor.cursor < list.len() - 1
+                    {
+                        self.edit_cursor.cursor += 1;
+                    }
                 }
                 _ => {}
             },
@@ -101,7 +105,10 @@ impl App {
     }
 
     pub fn move_cursor_up(&mut self) {
-        if self.state == AppState::AreYouSureDelDish || self.state == AppState::ReplaceList {
+        if self.state == AppState::AreYouSureDelDish
+            || self.state == AppState::ReplaceList
+            || self.state == AppState::PromptPrint
+        {
             self.ays_cursor = 0;
             return;
         }
