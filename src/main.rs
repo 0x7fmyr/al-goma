@@ -172,6 +172,11 @@ fn run(
                         break;
                     }
                     KeyCode::Esc => app.handle_esc(),
+
+                    KeyCode::Down => app.move_cursor_down(),
+                    KeyCode::Up => app.move_cursor_up(),
+                    KeyCode::Left => app.move_focus_left(),
+                    KeyCode::Right => app.move_focus_right(),
                     KeyCode::Char('p') => {
                         if matches!(app.state, AppState::PromptPrint) {
                             app::print_shopping_list_txt_file(
@@ -183,12 +188,9 @@ fn run(
                             app.state = AppState::ShowShoppingList
                         }
                     }
-                    KeyCode::Down => app.move_cursor_down(),
-                    KeyCode::Up => app.move_cursor_up(),
-                    KeyCode::Left => app.move_focus_left(),
-                    KeyCode::Right => app.move_focus_right(),
 
                     KeyCode::Char(c) => app.keyboard_input(c),
+
                     KeyCode::Backspace => app.backspace(),
                     KeyCode::Delete => app.handle_delete(),
 
