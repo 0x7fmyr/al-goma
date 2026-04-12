@@ -1,4 +1,4 @@
-use crate::items::{self, Category, Database, Dish};
+use crate::items::{self, Category, Database, Dish, ingredient_category_db};
 use crate::list;
 use crate::ui;
 use crate::ui::Cursor;
@@ -53,6 +53,7 @@ pub struct App {
     pub input: String,
     pub pending_dish: Option<Dish>,
     pub category_db: HashMap<String, Category>,
+    pub normalized_category_db: HashMap<String, Category>,
 }
 
 impl App {
@@ -80,6 +81,10 @@ impl App {
             selected_space: Space::MainLeft,
             db: db::load(),
             category_db: items::ingredient_category_db(),
+            normalized_category_db: ingredient_category_db()
+                .into_iter()
+                .map(|(k, v)| (k.replace(' ', ""), v))
+                .collect(),
             state: AppState::Normal,
             prev_state: None,
             input: String::new(),
@@ -133,12 +138,17 @@ impl App {
         match self.state {
             AppState::Normal | AppState::MovingFocus => {
                 if self.selected_space == Space::MainLeft && self.cursor == 0 {
-                    if self.current_dish_list.is_some() {
-                        self.state = AppState::ReplaceList;
-                        self.selected_space = Space::MainRight;
-                        self.moving_focus = false;
+                    if let Some(list) = self.current_dish_list.as_ref() {
+                        if list.is_empty() {
+                            self.state = AppState::NewList;
+                            return;
+                        } else {
+                            self.state = AppState::ReplaceList;
+                            self.selected_space = Space::MainRight;
+                            self.moving_focus = false;
 
-                        return;
+                            return;
+                        }
                     }
 
                     self.state = AppState::NewList;
@@ -146,7 +156,6 @@ impl App {
                 } else if self.selected_space == Space::MainLeft && self.cursor == 1 {
                     self.state = AppState::ShowShoppingList;
                     self.selected_space = Space::MainRight;
-                    return;
                 } else if self.selected_space == Space::MainLeft && self.cursor == 2 {
                     self.state = AppState::EnteringDishName;
                     self.selected_space = Space::MainRight
@@ -312,6 +321,13 @@ impl App {
             }
         }
 
+        if self.current_dish_list.is_none() {
+            self.current_dish_list = Some(vec![Dish {
+                name: "n/a".to_string(),
+                ingredients: vec![],
+            }]);
+        }
+
         list::save_shopping_list_config(self.shopping_list.clone());
     }
 
@@ -441,15 +457,14 @@ impl App {
         }
     }
 
-
     fn confim_category(&mut self) {
         let chosen_category: Category = match self.picking_cursor {
             0 => Category::Misc,
-            1 => Category::Vegtables,
+            1 => Category::Vegetables,
             2 => Category::Fruit,
             3 => Category::Dairy,
             4 => Category::Protein,
-            5 => Category::DryGoods,
+            5 => Category::Pantry,
             6 => Category::Spices,
             _ => Category::Misc,
         };
@@ -533,18 +548,10 @@ impl App {
         self.state = AppState::EnteringIngredients
     }
 
-    fn find_category(&mut self, input: String) -> Category {
-        let mut look_up = String::new();
-
-        for char in input.chars() {
-            if char == ' ' {
-                continue;
-            } else {
-                look_up.push(char);
-            }
-        }
-
-        if let Some(c) = self.category_db.get(&look_up.to_lowercase()) {
+    fn find_category(&mut self, look_up: String) -> Category {
+        if let Some(c) = self.normalized_category_db.get(&look_up.to_lowercase()) {
+            c.to_owned()
+        } else if let Some(c) = self.category_db.get(&look_up.to_lowercase()) {
             c.to_owned()
         } else {
             Category::Misc
@@ -598,7 +605,7 @@ pub fn print_shopping_list_txt_file(
 fn make_txt_string(shopping_list: Vec<Ingredient>, cat_option: bool, i_option: bool) -> String {
     let mut output = String::new();
     let mut txt = String::new();
-    let mut prev_category = Category::Vegtables;
+    let mut prev_category = Category::Vegetables;
     let mut veg_been_done = false;
     let mut cs = 0;
     let mut selected_cat: Category;
@@ -625,7 +632,7 @@ fn make_txt_string(shopping_list: Vec<Ingredient>, cat_option: bool, i_option: b
 
         if cat_option {
             if ing.category != prev_category
-                || (prev_category == Category::Vegtables && !veg_been_done)
+                || (prev_category == Category::Vegetables && !veg_been_done)
             {
                 output.push_str(&space);
                 output.push_str(&ui::get_category_name(ing.category));

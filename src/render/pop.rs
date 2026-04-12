@@ -126,13 +126,13 @@ pub fn pick_category(
     }
 
     let categories = [
-        "Annat",
-        "Grönsaker",
-        "Frukt",
-        "Mejeri",
+        "Misc",
+        "Vegetables",
+        "Fruit",
+        "Dairy",
         "Protein",
-        "Skafferi/Torr varor",
-        "Kryddor",
+        "Pantry",
+        "Spices",
     ];
 
     let mut line: Vec<Line> = Vec::new();

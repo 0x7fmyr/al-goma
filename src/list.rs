@@ -8,6 +8,10 @@ use serde::{Deserialize, Serialize};
 
 impl App {
     pub fn generate_list(&mut self) {
+        if self.db.dishes.is_empty() {
+            return;
+        }
+
         let mut rng = rand::thread_rng();
         for c in self.input.chars() {
             if !c.is_numeric() {

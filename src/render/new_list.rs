@@ -24,7 +24,15 @@ pub fn new_list(window: &mut Frame, rect: Rect, app: &mut app::App) {
         .constraints([Constraint::Fill(1)])
         .split(chose_window[1]);
 
-    let mut msg = Span::raw("How many Dishes?");
+    let mut msg = if app.db.dishes.is_empty() {
+        Span::styled(
+            "No dishes in dishtabase!",
+            Style::new().fg(Color::Red).add_modifier(Modifier::BOLD),
+        )
+    } else {
+        Span::raw("How many Dishes?")
+    };
+
     for c in app.input.chars() {
         if !c.is_numeric() {
             msg = Span::styled(
@@ -240,7 +248,7 @@ pub fn show_generated_list_ingredients(window: &mut Frame, rect: Rect, app: &mut
 
     let mut spans: Vec<Span> = Vec::new();
     let mut ingredients: Vec<Line> = Vec::new();
-    let mut prev_category = Category::Vegtables;
+    let mut prev_category = Category::Vegetables;
     let mut veg_been_done = false;
     let mut cs = 0;
     let mut selected_cat: Category;
@@ -318,7 +326,7 @@ pub fn show_generated_list_ingredients(window: &mut Frame, rect: Rect, app: &mut
             space.pop();
         }
 
-        if ing.category != prev_category || (prev_category == Category::Vegtables && !veg_been_done)
+        if ing.category != prev_category || (prev_category == Category::Vegetables && !veg_been_done)
         {
             spans.push(Span::raw(space));
             spans.push(

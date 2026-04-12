@@ -123,7 +123,7 @@ impl App {
             }
             Space::MainRight => match self.state {
                 AppState::ViewingDatabase | AppState::ShowShoppingList => {
-                    if self.db.dishes.is_empty() {
+                    if self.shopping_list.is_empty() {
                         return;
                     }
                     if self.db_cursor.cursor > 0 {
@@ -167,12 +167,12 @@ pub fn update_scroll(input: &mut Cursor) {
 
 pub fn get_category_name(c: items::Category) -> String {
     match c {
-        items::Category::Dairy => String::from("Mejeri"),
-        items::Category::DryGoods => String::from("Skafferi/Torr varor"),
-        items::Category::Spices => String::from("Kryddor"),
-        items::Category::Vegtables => String::from("Grönsaker"),
-        items::Category::Fruit => String::from("Frukt"),
+        items::Category::Dairy => String::from("Dairy"),
+        items::Category::Pantry => String::from("Pantry"),
+        items::Category::Spices => String::from("Spices"),
+        items::Category::Vegetables => String::from("Vegetables"),
+        items::Category::Fruit => String::from("Fruit"),
         items::Category::Protein => String::from("Protein"),
-        items::Category::Misc => String::from("Annat"),
+        items::Category::Misc => String::from("Misc"),
     }
 }
