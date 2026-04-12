@@ -178,18 +178,10 @@ impl App {
             }
             AppState::PromptPrint => {
                 if self.ays_cursor == 0 {
-                    if self.text_options.0 == false {
-                        self.text_options.0 = true
-                    } else {
-                        self.text_options.0 = false
-                    }
+                    self.text_options.0 = !self.text_options.0;
                 }
                 if self.ays_cursor == 1 {
-                    if self.text_options.1 == false {
-                        self.text_options.1 = true
-                    } else {
-                        self.text_options.1 = false
-                    }
+                    self.text_options.1 = !self.text_options.1;
                 }
             }
             AppState::EnteringDishName => {
@@ -449,37 +441,19 @@ impl App {
         }
     }
 
-    // fn find_category_for_shopping_list(&mut self) -> Category{
-    //     let chosen_category: Category;
-
-    //     match self.picking_cursor {
-    //         0 => chosen_category = Category::Misc,
-    //         1 => chosen_category = Category::Vegtables,
-    //         2 => chosen_category = Category::Fruit,
-    //         3 => chosen_category = Category::Dairy,
-    //         4 => chosen_category = Category::Protein,
-    //         5 => chosen_category = Category::DryGoods,
-    //         6 => chosen_category = Category::Spices,
-    //         _ => chosen_category = Category::Misc,
-    //     }
-
-    //     chosen_category
-
-    // }
 
     fn confim_category(&mut self) {
-        let chosen_category: Category;
+        let chosen_category: Category = match self.picking_cursor {
+            0 => Category::Misc,
+            1 => Category::Vegtables,
+            2 => Category::Fruit,
+            3 => Category::Dairy,
+            4 => Category::Protein,
+            5 => Category::DryGoods,
+            6 => Category::Spices,
+            _ => Category::Misc,
+        };
 
-        match self.picking_cursor {
-            0 => chosen_category = Category::Misc,
-            1 => chosen_category = Category::Vegtables,
-            2 => chosen_category = Category::Fruit,
-            3 => chosen_category = Category::Dairy,
-            4 => chosen_category = Category::Protein,
-            5 => chosen_category = Category::DryGoods,
-            6 => chosen_category = Category::Spices,
-            _ => chosen_category = Category::Misc,
-        }
         if let Some(pending_dish) = self.pending_dish.as_mut() {
             let mut i = pending_dish.ingredients.pop().unwrap();
             i.category = chosen_category;
@@ -494,22 +468,22 @@ impl App {
             if prev_state == AppState::EditingDish {
                 self.db.dishes[self.db_cursor.cursor].ingredients[self.edit_cursor.cursor]
                     .category = chosen_category;
-            } else if prev_state == AppState::AddToShoppingList {
-                if let Some(mut i) = self.shopping_list.pop() {
-                    let search_input = i.name.clone();
-                    i.category = chosen_category;
-                    self.shopping_list.push(i);
-                    self.shopping_list.sort_by_key(|c| c.category);
+            } else if prev_state == AppState::AddToShoppingList
+                && let Some(mut i) = self.shopping_list.pop()
+            {
+                let search_input = i.name.clone();
+                i.category = chosen_category;
+                self.shopping_list.push(i);
+                self.shopping_list.sort_by_key(|c| c.category);
 
-                    for (i, ing) in self.shopping_list.iter().enumerate() {
-                        if ing.name == search_input {
-                            self.db_cursor.cursor = i;
-                            ui::update_scroll(&mut self.db_cursor)
-                        }
+                for (i, ing) in self.shopping_list.iter().enumerate() {
+                    if ing.name == search_input {
+                        self.db_cursor.cursor = i;
+                        ui::update_scroll(&mut self.db_cursor)
                     }
-
-                    list::save_shopping_list_config(self.shopping_list.clone());
                 }
+
+                list::save_shopping_list_config(self.shopping_list.clone());
             }
 
             self.state = prev_state;
@@ -603,7 +577,7 @@ pub fn print_shopping_list_txt_file(
 ) -> std::io::Result<()> {
     let s = make_txt_string(shopping_list, wants_categories, wants_index);
     let date = Utc::now().date_naive();
-    let mut file_name = String::from(format!("Shopping-Lists/Shopping_List-{}.txt", date));
+    let mut file_name = format!("Shopping-Lists/Shopping_List-{}.txt", date);
 
     fs::create_dir_all("Shopping-Lists/")?;
 
@@ -636,7 +610,7 @@ fn make_txt_string(shopping_list: Vec<Ingredient>, cat_option: bool, i_option: b
 
         if i_option {
             output.push_str(&i.to_string());
-            output.push_str(&". ".to_string());
+            output.push_str(". ");
         }
 
         output.push_str(&ing.name.to_string());
@@ -645,10 +619,8 @@ fn make_txt_string(shopping_list: Vec<Ingredient>, cat_option: bool, i_option: b
             space.pop();
         }
 
-        if i_option {
-            if i > 9 {
-                space.pop();
-            }
+        if i_option && i > 9 {
+            space.pop();
         }
 
         if cat_option {

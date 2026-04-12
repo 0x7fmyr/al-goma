@@ -239,11 +239,11 @@ pub fn print_txt_options(window: &mut Frame, rect: Rect, app: &mut app::App) {
 
     let mut options = ["[ ] Numbers", "[ ] Categories"];
 
-    if app.text_options.0 == true {
+    if app.text_options.0 {
         options[0] = "[x] Numbers"
     }
 
-    if app.text_options.1 == true {
+    if app.text_options.1 {
         options[1] = "[x] Categories"
     }
 

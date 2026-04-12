@@ -67,7 +67,7 @@ impl App {
                     continue;
                 }
 
-                if list.iter().any(|d| *d == rand_dish) {
+                if list.contains(&rand_dish) {
                     continue;
                 }
 

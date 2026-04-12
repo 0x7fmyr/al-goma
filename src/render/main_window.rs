@@ -273,7 +273,6 @@ pub fn right(window: &mut Frame, rect: Rect, app: &mut app::App) {
                     height: input_h,
                 },
                 app,
-                
             );
         }
     }
@@ -288,14 +287,13 @@ pub fn right(window: &mut Frame, rect: Rect, app: &mut app::App) {
 
     let input_w: u16 = rect.width / 2 + rect.width / 3;
     let input_h: u16 = 3;
-    let center_y: u16;
     let center_x = rect.x + (rect.width / 2) - (input_w / 2);
 
-    if rect.height > 3 {
-        center_y = rect.y + (rect.height - 8 / 2) - (input_h / 2);
+    let center_y: u16 = if rect.height > 3 {
+        rect.y + (rect.height - 8 / 2) - (input_h / 2)
     } else {
-        center_y = 2
-    }
+        2
+    };
 
     if matches!(app.state, AppState::ViewingDatabase)
         || matches!(app.state, AppState::EditingDish)
