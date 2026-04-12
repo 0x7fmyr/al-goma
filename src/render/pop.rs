@@ -196,7 +196,7 @@ pub fn input_box(window: &mut Frame, rect: Rect, app: &mut app::App, title_msg: 
     );
 }
 
-pub fn print_txt_options(window: &mut Frame, rect: Rect, app: &mut app::App, s: AppState) {
+pub fn print_txt_options(window: &mut Frame, rect: Rect, app: &mut app::App) {
     let option_window = Layout::default()
         .direction(Direction::Vertical)
         .constraints([

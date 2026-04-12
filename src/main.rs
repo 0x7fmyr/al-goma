@@ -168,9 +168,16 @@ fn run(
                 } => app.state = AppState::PromptPrint,
                 //plain keypresses
                 KeyEvent { code, .. } => match code {
-                    KeyCode::Char('q') => {
-                        break;
-                    }
+                    KeyCode::Char('q') => match app.state {
+                        AppState::EnteringDishName
+                        | AppState::EnteringIngredients
+                        | AppState::EditingIngredient
+                        | AppState::EditingDishName
+                        | AppState::EditingAddIngredient
+                        | AppState::NewList
+                        | AppState::AddToShoppingList => app.keyboard_input('q'),
+                        _ => break,
+                    },
                     KeyCode::Esc => app.handle_esc(),
 
                     KeyCode::Down => app.move_cursor_down(),
@@ -186,6 +193,8 @@ fn run(
                             )
                             .expect("failed to print file..");
                             app.state = AppState::ShowShoppingList
+                        } else {
+                            app.keyboard_input('p')
                         }
                     }
 

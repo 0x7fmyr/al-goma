@@ -8,7 +8,7 @@ use ratatui::{Frame, layout::Rect};
 
 use super::db;
 use super::pop;
-use crate::app::{self, App, AppState, Space};
+use crate::app::{self, AppState, Space};
 use crate::render::{self, new_list};
 
 pub fn left(window: &mut Frame, rect: Rect, app: &mut app::App) {
@@ -87,7 +87,6 @@ pub fn right(window: &mut Frame, rect: Rect, app: &mut app::App) {
         }
         AppState::PromptPrint => {
             tooltip = "[up/down] select   [enter] confirm   [p] print   [esc] cancel".to_string();
-
         }
         _ => {}
     }
@@ -237,7 +236,7 @@ pub fn right(window: &mut Frame, rect: Rect, app: &mut app::App) {
                 i_name,
             );
         }
-        
+
         if matches!(app.state, AppState::PromptPrint) {
             let mut input_w: u16 = 38;
             let mut input_h: u16 = 10;
@@ -254,7 +253,7 @@ pub fn right(window: &mut Frame, rect: Rect, app: &mut app::App) {
                 input_w = 0;
             }
             // todo: work!
-            
+
             window.render_widget(
                 Clear,
                 Rect {
@@ -264,7 +263,7 @@ pub fn right(window: &mut Frame, rect: Rect, app: &mut app::App) {
                     height: input_h,
                 },
             );
-             
+
             pop::print_txt_options(
                 window,
                 Rect {
@@ -274,10 +273,8 @@ pub fn right(window: &mut Frame, rect: Rect, app: &mut app::App) {
                     height: input_h,
                 },
                 app,
-                prev_state,
+                
             );
-            
-            
         }
     }
 
@@ -339,7 +336,7 @@ pub fn right(window: &mut Frame, rect: Rect, app: &mut app::App) {
                     height: input_h,
                 },
             );
-            
+
             if rect.height > 12 {
                 db::edit_widow(
                     window,

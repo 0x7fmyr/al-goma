@@ -3,7 +3,7 @@ use crate::list;
 use crate::ui;
 use crate::ui::Cursor;
 use crate::{db, items::Ingredient};
-use chrono::{DateTime, Datelike, Utc};
+use chrono::Utc;
 use std::collections::HashMap;
 use std::fs;
 
