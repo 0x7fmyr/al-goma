@@ -1,5 +1,7 @@
 use std::collections::HashMap;
-#[derive(Debug, PartialEq, Eq, Hash)]
+
+use serde::{Deserialize, Serialize};
+#[derive(Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum UiText {
     NewList,
     ViewEditList,
@@ -38,7 +40,6 @@ pub enum UiText {
     DeletingAys2,
     PPEnterDishName,
     PPEnterIngredient,
-    
 
     //CATEGORIES
     Vegetables,
@@ -58,9 +59,6 @@ pub enum UiText {
     TTShowGenList,
     TTShowShoppingList,
     TTPromtPrint,
-       
-    
-    
 }
 
 pub fn swedish() -> HashMap<UiText, &'static str> {
@@ -102,8 +100,6 @@ pub fn swedish() -> HashMap<UiText, &'static str> {
         (UiText::DeletingAys2, "Är du säker?"),
         (UiText::PPEnterDishName, "Skriv Rättens Namn"),
         (UiText::PPEnterIngredient, "Lägg till Ingrediens"),
-
-
         //CATEGORIES
         (UiText::Vegetables, "Grönsaker"),
         (UiText::Fruit, "Frukt"),
@@ -142,8 +138,6 @@ pub fn swedish() -> HashMap<UiText, &'static str> {
             UiText::TTPromtPrint,
             "[up/down] välj   [enter] bekräfta   [p] exportera   [esc] avbryt",
         ),
-        
-        
     ])
 }
 
@@ -176,17 +170,13 @@ pub fn english() -> HashMap<UiText, &'static str> {
         (UiText::CantFindCategory, "I can't find a category for:"),
         (UiText::PleaseChooseOne, "Please choose one:"),
         (UiText::PleaseChooseCategory, "Please choose category for:"),
-        (
-            UiText::GeneratingReplaceOld1,
-            "Generating a new list will",
-        ),
+        (UiText::GeneratingReplaceOld1, "Generating a new list will"),
         (UiText::GeneratingReplaceOld2, "delete the old one."),
         (UiText::GeneratingReplaceOld3, "Make new list?"),
         (UiText::DeletingAys1, "Deleting:"),
         (UiText::DeletingAys2, "Are You Sure?"),
         (UiText::PPEnterDishName, "Enter the Dish Name"),
         (UiText::PPEnterIngredient, "Enter Ingredient"),
-        
         //CATEGORIES
         (UiText::Vegetables, "Vegetables"),
         (UiText::Fruit, "Fruit"),
@@ -195,7 +185,6 @@ pub fn english() -> HashMap<UiText, &'static str> {
         (UiText::Pantry, "Pantry"),
         (UiText::Spices, "Spices"),
         (UiText::Misc, "Misc"),
-        
         //TOOLTIPS
         (
             UiText::TTInputBox,
@@ -226,8 +215,5 @@ pub fn english() -> HashMap<UiText, &'static str> {
             UiText::TTPromtPrint,
             "[up/down] select   [enter] confirm   [p] print   [esc] cancel",
         ),
-        
-        
-        
     ])
 }

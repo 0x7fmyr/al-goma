@@ -5,6 +5,7 @@ use crate::ui::Cursor;
 use crate::{db, items::Ingredient};
 use crate::{list, locale};
 use chrono::Utc;
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fs;
 
@@ -14,9 +15,15 @@ pub enum Space {
     MainRight,
 }
 
-#[derive(Debug, PartialEq)]
-pub struct Settings{
-    pub langauge: HashMap<UiText, &'static str>
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
+pub enum Language {
+    Eng,
+    Swe,
+}
+
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
+pub struct Settings {
+    pub langauge: Language,
 }
 
 #[derive(Debug, PartialEq, Clone, Copy)]
@@ -65,11 +72,23 @@ pub struct App {
 
 impl App {
     pub fn init() -> Self {
+        let text = match load_settings().langauge {
+            Language::Eng => locale::english(),
+            Language::Swe => locale::swedish(),
+        };
+
+        let left_window_actions = vec![
+            text[&UiText::NewList],
+            text[&UiText::ViewEditList],
+            text[&UiText::AddToDishtabase],
+            text[&UiText::ViewEditDishtabase],
+        ];
+
         App {
             current_dish_list: list::load(),
             shopping_list: list::load_shopping_list_config(),
             text_options: (false, false),
-            text: locale::english(),
+            text: text,
             cursor: 0,
 
             db_cursor: Cursor {
@@ -99,16 +118,9 @@ impl App {
             prev_state: None,
             input: String::new(),
             pending_dish: None,
-            left_window_actions: vec![
-                locale::swedish().get(&UiText::NewList).unwrap(),
-                locale::swedish().get(&UiText::ViewEditList).unwrap(),
-                locale::swedish().get(&UiText::AddToDishtabase).unwrap(),
-                locale::swedish().get(&UiText::ViewEditDishtabase).unwrap(),
-            ],
+            left_window_actions: left_window_actions,
         }
     }
-
-
 
     pub fn keyboard_input(&mut self, c: char) {
         match self.state {
@@ -696,4 +708,26 @@ pub fn uppercase_words(data: &str) -> String {
         }
     }
     result
+}
+
+fn load_settings() -> Settings {
+    let settings = match fs::read_to_string(".config/settings.toml") {
+        Ok(s) => s,
+        Err(_) => {
+            let default_settings = Settings {
+                langauge: Language::Eng,
+            };
+
+            let default = toml::to_string(&default_settings).expect("failed to serialize...");
+
+            fs::create_dir_all(".config/").expect("failed to make dir: .config");
+            fs::write(".config/settings.toml", default).expect("failed to write file...");
+
+            return default_settings;
+        }
+    };
+
+    let settings_load: Settings = toml::from_str(&settings).expect("settings.toml is fucked!");
+
+    settings_load
 }
