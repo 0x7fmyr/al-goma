@@ -9,6 +9,7 @@ use ratatui::{Frame, layout::Rect};
 use super::db;
 use super::pop;
 use crate::app::{self, AppState, Space};
+use crate::locale::UiText;
 use crate::render::{self, new_list};
 
 pub fn left(window: &mut Frame, rect: Rect, app: &mut app::App) {
@@ -64,30 +65,20 @@ pub fn right(window: &mut Frame, rect: Rect, app: &mut app::App) {
 
     match app.state {
         AppState::EnteringDishName | AppState::EnteringIngredients => {
-            tooltip = "[enter] confirm   [del] remove   [ctrl+s] save   [esc] cancel".to_string();
+            tooltip = app.text_get(UiText::TTInputBox)
         }
-        AppState::ViewingDatabase => {
-            tooltip = "[up/down] select   [enter] edit   [esc] cancel".to_string();
-        }
-        AppState::EditingDish => {
-            tooltip =
-                "[up/down] select [enter] edit [ctrl+n] name [ctrl+a] add  [ctrl+k] category [del] remove [esc] cancel".to_string();
-        }
+        AppState::ViewingDatabase => tooltip = app.text_get(UiText::TTViewingDb),
+        AppState::EditingDish => tooltip = app.text_get(UiText::TTEditingDish),
         AppState::EditingIngredient | AppState::EditingDishName => {
-            tooltip = "[enter] confirm   [esc] cancel".to_string();
+            tooltip = app.text_get(UiText::TTEditingIngDName)
         }
+
         AppState::PickingCategory | AppState::AreYouSureDelDish => {
-            tooltip = "[up/down] select   [enter] confirm   [esc] cancel".to_string();
+            tooltip = app.text_get(UiText::TTPopUp)
         }
-        AppState::ShowGeneratedList => {
-            tooltip = "[enter] accept   [del] new dish   [esc] cancel".to_string();
-        }
-        AppState::ShowShoppingList => {
-            tooltip = "[del] remove   [ctrl+a] add   [ctrl+p] print txt   [esc] cancel".to_string();
-        }
-        AppState::PromptPrint => {
-            tooltip = "[up/down] select   [enter] confirm   [p] print   [esc] cancel".to_string();
-        }
+        AppState::ShowGeneratedList => tooltip = app.text_get(UiText::TTShowGenList),
+        AppState::ShowShoppingList => tooltip = app.text_get(UiText::TTShowShoppingList),
+        AppState::PromptPrint => tooltip = app.text_get(UiText::TTPromtPrint),
         _ => {}
     }
 
@@ -110,9 +101,9 @@ pub fn right(window: &mut Frame, rect: Rect, app: &mut app::App) {
             w += 5;
             h += 1;
             let msg = vec![
-                Line::from("Generating a new list will"),
-                Line::from("delete the old one."),
-                Line::from("Make new list?"),
+                Line::from(app.text_get(UiText::GeneratingReplaceOld1)),
+                Line::from(app.text_get(UiText::GeneratingReplaceOld2)),
+                Line::from(app.text_get(UiText::GeneratingReplaceOld3)),
             ];
             window.render_widget(
                 Clear,
@@ -424,9 +415,13 @@ pub fn right(window: &mut Frame, rect: Rect, app: &mut app::App) {
 
             let deleting_name = app.db.dishes[app.db_cursor.cursor].name.clone();
             let msg = vec![
-                Line::from(format!("Deleting: {}", deleting_name)),
+                Line::from(format!(
+                    "{} {}",
+                    app.text_get(UiText::DeletingAys1),
+                    deleting_name
+                )),
                 Line::from(""),
-                Line::from("Are You Sure?"),
+                Line::from(app.text_get(UiText::DeletingAys2)),
             ];
 
             pop::are_you_sure(
@@ -465,7 +460,7 @@ pub fn right(window: &mut Frame, rect: Rect, app: &mut app::App) {
                 height: input_h,
             },
             app,
-            "Enter the Dish Name".to_string(),
+            app.text_get(UiText::PPEnterDishName),
         );
     }
 
@@ -493,7 +488,7 @@ pub fn right(window: &mut Frame, rect: Rect, app: &mut app::App) {
                 height: input_h,
             },
             app,
-            "Enter Ingredient".to_string(),
+            app.text_get(UiText::PPEnterIngredient),
         );
     }
 }

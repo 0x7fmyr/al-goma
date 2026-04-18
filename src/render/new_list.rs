@@ -8,7 +8,8 @@ use ratatui::{Frame, layout::Rect};
 
 use crate::app;
 use crate::items::Category;
-use crate::{AppState, ui};
+use crate::locale::UiText;
+use crate::{AppState, };
 
 pub fn new_list(window: &mut Frame, rect: Rect, app: &mut app::App) {
     let chose_window = Layout::default()
@@ -26,17 +27,17 @@ pub fn new_list(window: &mut Frame, rect: Rect, app: &mut app::App) {
 
     let mut msg = if app.db.dishes.is_empty() {
         Span::styled(
-            "No dishes in dishtabase!",
+            app.text_get(UiText::NoDishesInDishtabase),
             Style::new().fg(Color::Red).add_modifier(Modifier::BOLD),
         )
     } else {
-        Span::raw("How many Dishes?")
+        Span::raw(app.text_get(UiText::HowManyDishes))
     };
 
     for c in app.input.chars() {
         if !c.is_numeric() {
             msg = Span::styled(
-                "Please only enter Numbers",
+                app.text_get(UiText::OnlyEnterNums),
                 Style::new().fg(Color::Red).add_modifier(Modifier::BOLD),
             );
         }
@@ -109,7 +110,7 @@ pub fn show_generated_list(window: &mut Frame, rect: Rect, app: &mut app::App) {
         ),
         edit_window[0],
     );
-    let header = Line::from("Menu:")
+    let header = Line::from(app.text_get(UiText::Menu))
         .add_modifier(Modifier::BOLD)
         .add_modifier(Modifier::UNDERLINED);
 
@@ -218,7 +219,7 @@ pub fn show_generated_list(window: &mut Frame, rect: Rect, app: &mut app::App) {
                 .border_style(Style::default().fg(Color::Blue))
                 .border_type(Rounded)
                 .borders(Borders::ALL)
-                .title("Generated List")
+                .title(app.text_get(UiText::GeneratedList))
                 .title_alignment(Alignment::Center),
         ),
         rect,
@@ -238,7 +239,7 @@ pub fn show_generated_list_ingredients(window: &mut Frame, rect: Rect, app: &mut
 
     window.render_widget(
         Paragraph::new(
-            Line::from("Shopping list:")
+            Line::from(app.text_get(UiText::ShoppingList))
                 .add_modifier(Modifier::BOLD)
                 .add_modifier(Modifier::UNDERLINED),
         )
@@ -326,18 +327,19 @@ pub fn show_generated_list_ingredients(window: &mut Frame, rect: Rect, app: &mut
             space.pop();
         }
 
-        if ing.category != prev_category || (prev_category == Category::Vegetables && !veg_been_done)
+        if ing.category != prev_category
+            || (prev_category == Category::Vegetables && !veg_been_done)
         {
             spans.push(Span::raw(space));
             spans.push(
                 Span::styled(
-                    ui::get_category_name(ing.category),
+                    app.get_category_name(ing.category),
                     Style::new().fg(Color::DarkGray),
                 )
                 .add_modifier(Modifier::BOLD),
             );
         } else if ing.category == prev_category {
-            let cat_count = ui::get_category_name(prev_category).len();
+            let cat_count = app.get_category_name(prev_category).len();
 
             while cs < cat_count {
                 space.push(' ');
