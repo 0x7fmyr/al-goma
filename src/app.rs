@@ -1,11 +1,13 @@
 use crate::items::{self, Category, Database, Dish, ingredient_category_db};
-use crate::list;
+use crate::locale::UiText;
 use crate::ui;
 use crate::ui::Cursor;
 use crate::{db, items::Ingredient};
+use crate::{list, locale};
 use chrono::Utc;
 use std::collections::HashMap;
 use std::fs;
+use std::process::Output;
 
 #[derive(Debug, PartialEq)]
 pub enum Space {
@@ -39,6 +41,7 @@ pub struct App {
     pub current_dish_list: Option<Vec<Dish>>,
     pub shopping_list: Vec<Ingredient>,
     pub text_options: (bool, bool),
+    pub text: HashMap<UiText, &'static str>,
     pub cursor: usize,
     pub db_cursor: Cursor,
     pub edit_cursor: Cursor,
@@ -62,6 +65,7 @@ impl App {
             current_dish_list: list::load(),
             shopping_list: list::load_shopping_list_config(),
             text_options: (false, false),
+            text: locale::swedish(),
             cursor: 0,
 
             db_cursor: Cursor {
@@ -90,11 +94,10 @@ impl App {
             input: String::new(),
             pending_dish: None,
             left_window_actions: vec![
-                "New List",
-                "View/Edit List",
-                "Add Dish to Dishtabase",
-                "View/Edit Dishtabase",
-                //"Upload",
+                locale::swedish().get(&UiText::NewList).unwrap(),
+                locale::swedish().get(&UiText::ViewEditList).unwrap(),
+                locale::swedish().get(&UiText::AddToDishtabase).unwrap(),
+                locale::swedish().get(&UiText::ViewEditDishtabase).unwrap(),
             ],
         }
     }
@@ -556,6 +559,11 @@ impl App {
         } else {
             Category::Misc
         }
+    }
+
+    pub fn text_get(&self, input: UiText) -> String {
+        let output = self.text.get(&input).expect("No Translation!").to_string();
+        output
     }
 }
 

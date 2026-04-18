@@ -21,6 +21,7 @@ mod app;
 mod db;
 mod items;
 mod list;
+mod locale;
 mod render;
 mod ui;
 
@@ -92,7 +93,7 @@ fn run(
                 let chunks = Layout::default()
                     .direction(Direction::Horizontal)
                     .constraints([
-                        Constraint::Length(26),
+                        Constraint::Length(30),
                         Constraint::Length(2),
                         Constraint::Fill(1),
                     ])
@@ -123,6 +124,8 @@ fn run(
             match key {
                 //mod presses
                 KeyEvent {
+                    //todo! fix this is a global command no good
+
                     code: KeyCode::Char('s'),
                     modifiers: KeyModifiers::CONTROL,
                     ..
@@ -132,6 +135,7 @@ fn run(
                     }
                 }
                 KeyEvent {
+                    //todo! fix this is a global command no good
                     code: KeyCode::Char('n'),
                     modifiers: KeyModifiers::CONTROL,
                     ..
