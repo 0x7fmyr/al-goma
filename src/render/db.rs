@@ -10,7 +10,6 @@ use ratatui::{Frame, layout::Rect};
 
 use super::pop;
 use crate::app::{self, AppState};
-use crate::ui;
 use crate::locale::UiText;
 
 pub fn edit_widow(window: &mut Frame, rect: Rect, app: &mut app::App) {
@@ -112,7 +111,7 @@ pub fn edit_widow(window: &mut Frame, rect: Rect, app: &mut app::App) {
         }
 
         items.push(Span::styled(
-            format!(" [{}]", ui::get_category_name(i.category)),
+            format!(" [{}]", app.get_category_name(i.category)),
             Style::new().fg(Color::DarkGray),
         ));
 

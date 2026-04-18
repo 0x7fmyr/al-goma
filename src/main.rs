@@ -125,7 +125,6 @@ fn run(
                 //mod presses
                 KeyEvent {
                     //todo! fix this is a global command no good
-
                     code: KeyCode::Char('s'),
                     modifiers: KeyModifiers::CONTROL,
                     ..
@@ -190,7 +189,7 @@ fn run(
                     KeyCode::Right => app.move_focus_right(),
                     KeyCode::Char('p') => {
                         if matches!(app.state, AppState::PromptPrint) {
-                            app::print_shopping_list_txt_file(
+                            app.print_shopping_list_txt_file(
                                 app.shopping_list.clone(),
                                 app.text_options.0,
                                 app.text_options.1,

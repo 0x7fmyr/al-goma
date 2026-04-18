@@ -1,4 +1,4 @@
-use crate::items::{self, Category, Database, Dish, ingredient_category_db};
+use crate::items::{self, Category, Database, Dish, ingredient_category_db_eng};
 use crate::locale::UiText;
 use crate::ui;
 use crate::ui::Cursor;
@@ -7,12 +7,16 @@ use crate::{list, locale};
 use chrono::Utc;
 use std::collections::HashMap;
 use std::fs;
-use std::process::Output;
 
 #[derive(Debug, PartialEq)]
 pub enum Space {
     MainLeft,
     MainRight,
+}
+
+#[derive(Debug, PartialEq)]
+pub struct Settings{
+    pub langauge: HashMap<UiText, &'static str>
 }
 
 #[derive(Debug, PartialEq, Clone, Copy)]
@@ -65,7 +69,7 @@ impl App {
             current_dish_list: list::load(),
             shopping_list: list::load_shopping_list_config(),
             text_options: (false, false),
-            text: locale::swedish(),
+            text: locale::english(),
             cursor: 0,
 
             db_cursor: Cursor {
@@ -84,11 +88,13 @@ impl App {
             moving_focus: false,
             selected_space: Space::MainLeft,
             db: db::load(),
-            category_db: items::ingredient_category_db(),
-            normalized_category_db: ingredient_category_db()
+
+            category_db: items::ingredient_category_db_eng(),
+            normalized_category_db: ingredient_category_db_eng()
                 .into_iter()
                 .map(|(k, v)| (k.replace(' ', ""), v))
                 .collect(),
+
             state: AppState::Normal,
             prev_state: None,
             input: String::new(),
@@ -101,6 +107,9 @@ impl App {
             ],
         }
     }
+
+
+
     pub fn keyboard_input(&mut self, c: char) {
         match self.state {
             AppState::EnteringDishName
@@ -565,6 +574,110 @@ impl App {
         let output = self.text.get(&input).expect("No Translation!").to_string();
         output
     }
+
+    pub fn print_shopping_list_txt_file(
+        &self,
+        shopping_list: Vec<Ingredient>,
+        wants_index: bool,
+        wants_categories: bool,
+    ) -> std::io::Result<()> {
+        let s = self.make_txt_string(shopping_list, wants_categories, wants_index);
+        let date = Utc::now().date_naive();
+        let mut file_name = format!("Shopping-Lists/Shopping_List-{}.txt", date);
+
+        fs::create_dir_all("Shopping-Lists/")?;
+
+        if fs::exists(file_name.clone()).unwrap() {
+            let mut i = 2;
+            file_name = format!("Shopping-Lists/Shopping_List-{}({}).txt", date, i);
+            while fs::exists(file_name.clone()).unwrap() {
+                i += 1;
+                file_name = format!("Shopping-Lists/Shopping_List-{}({}).txt", date, i);
+            }
+        }
+
+        fs::write(file_name, s)?;
+
+        Ok(())
+    }
+
+    fn make_txt_string(
+        &self,
+        shopping_list: Vec<Ingredient>,
+        cat_option: bool,
+        i_option: bool,
+    ) -> String {
+        let mut output = String::new();
+        let mut txt = String::new();
+        let mut prev_category = Category::Vegetables;
+        let mut veg_been_done = false;
+        let mut cs = 0;
+        let mut selected_cat: Category;
+
+        for (i, ing) in shopping_list.iter().enumerate() {
+            let mut space = "                         ".to_string();
+            let i = i + 1;
+            selected_cat = ing.category;
+
+            if i_option {
+                output.push_str(&i.to_string());
+                output.push_str(". ");
+            }
+
+            output.push_str(&ing.name.to_string());
+
+            for _ in ing.name.chars() {
+                space.pop();
+            }
+
+            if i_option && i > 9 {
+                space.pop();
+            }
+
+            if cat_option {
+                if ing.category != prev_category
+                    || (prev_category == Category::Vegetables && !veg_been_done)
+                {
+                    output.push_str(&space);
+                    output.push_str(&self.get_category_name(ing.category));
+                } else if ing.category == prev_category {
+                    let cat_count = self.get_category_name(prev_category).len();
+
+                    while cs < cat_count {
+                        space.push(' ');
+                        cs += 1
+                    }
+
+                    if selected_cat == ing.category {
+                        space.pop();
+                    }
+
+                    let mut margin = "│";
+
+                    if i < shopping_list.len() {
+                        let next_cat = shopping_list[i].category;
+                        if next_cat != ing.category {
+                            space.drain(..2);
+                            margin = "──┘";
+                        }
+                    } else if i == shopping_list.len() {
+                        space.drain(..2);
+                        margin = "──┘";
+                    }
+
+                    output.push_str(&space);
+                    output.push_str(margin);
+                }
+            }
+            cs = 0;
+            prev_category = ing.category;
+            veg_been_done = true;
+            output.push('\n');
+            txt.push_str(&output.clone());
+            output.clear();
+        }
+        txt
+    }
 }
 
 pub fn uppercase_words(data: &str) -> String {
@@ -583,102 +696,4 @@ pub fn uppercase_words(data: &str) -> String {
         }
     }
     result
-}
-
-pub fn print_shopping_list_txt_file(
-    shopping_list: Vec<Ingredient>,
-    wants_index: bool,
-    wants_categories: bool,
-) -> std::io::Result<()> {
-    let s = make_txt_string(shopping_list, wants_categories, wants_index);
-    let date = Utc::now().date_naive();
-    let mut file_name = format!("Shopping-Lists/Shopping_List-{}.txt", date);
-
-    fs::create_dir_all("Shopping-Lists/")?;
-
-    if fs::exists(file_name.clone()).unwrap() {
-        let mut i = 2;
-        file_name = format!("Shopping-Lists/Shopping_List-{}({}).txt", date, i);
-        while fs::exists(file_name.clone()).unwrap() {
-            i += 1;
-            file_name = format!("Shopping-Lists/Shopping_List-{}({}).txt", date, i);
-        }
-    }
-
-    fs::write(file_name, s)?;
-
-    Ok(())
-}
-
-fn make_txt_string(shopping_list: Vec<Ingredient>, cat_option: bool, i_option: bool) -> String {
-    let mut output = String::new();
-    let mut txt = String::new();
-    let mut prev_category = Category::Vegetables;
-    let mut veg_been_done = false;
-    let mut cs = 0;
-    let mut selected_cat: Category;
-
-    for (i, ing) in shopping_list.iter().enumerate() {
-        let mut space = "                         ".to_string();
-        let i = i + 1;
-        selected_cat = ing.category;
-
-        if i_option {
-            output.push_str(&i.to_string());
-            output.push_str(". ");
-        }
-
-        output.push_str(&ing.name.to_string());
-
-        for _ in ing.name.chars() {
-            space.pop();
-        }
-
-        if i_option && i > 9 {
-            space.pop();
-        }
-
-        if cat_option {
-            if ing.category != prev_category
-                || (prev_category == Category::Vegetables && !veg_been_done)
-            {
-                output.push_str(&space);
-                output.push_str(&ui::get_category_name(ing.category));
-            } else if ing.category == prev_category {
-                let cat_count = ui::get_category_name(prev_category).len();
-
-                while cs < cat_count {
-                    space.push(' ');
-                    cs += 1
-                }
-
-                if selected_cat == ing.category {
-                    space.pop();
-                }
-
-                let mut margin = "│";
-
-                if i < shopping_list.len() {
-                    let next_cat = shopping_list[i].category;
-                    if next_cat != ing.category {
-                        space.drain(..2);
-                        margin = "──┘";
-                    }
-                } else if i == shopping_list.len() {
-                    space.drain(..2);
-                    margin = "──┘";
-                }
-
-                output.push_str(&space);
-                output.push_str(margin);
-            }
-        }
-        cs = 0;
-        prev_category = ing.category;
-        veg_been_done = true;
-        output.push('\n');
-        txt.push_str(&output.clone());
-        output.clear();
-    }
-    txt
 }

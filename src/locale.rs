@@ -36,6 +36,8 @@ pub enum UiText {
     GeneratingReplaceOld3,
     DeletingAys1,
     DeletingAys2,
+    PPEnterDishName,
+    PPEnterIngredient,
     
 
     //CATEGORIES
@@ -56,10 +58,7 @@ pub enum UiText {
     TTShowGenList,
     TTShowShoppingList,
     TTPromtPrint,
-    
-    //POPUPS
-    PPEnterDishName,
-    PPEnterIngredient,
+       
     
     
 }
@@ -74,7 +73,7 @@ pub fn swedish() -> HashMap<UiText, &'static str> {
         //NEW LIST TEXT
         (UiText::NoDishesInDishtabase, "Inga Rätter i Matabas!"),
         (UiText::HowManyDishes, "Hur Många Rätter?"),
-        (UiText::OnlyEnterNums, "Vargod och ange bara Siffror"),
+        (UiText::OnlyEnterNums, "Ange bara Siffror"),
         (UiText::Menu, "Menu"),
         (UiText::GeneratedList, "Genererad Lista"),
         (UiText::ShoppingList, "Shoppinglista:"),
@@ -91,7 +90,7 @@ pub fn swedish() -> HashMap<UiText, &'static str> {
         (UiText::CheckNumYes, "[x] Nummer"),
         (UiText::CheckCategoryYes, "[x] Kategorier"),
         (UiText::CantFindCategory, "Jag kan inte hitta kategori för:"),
-        (UiText::PleaseChooseOne, "Vargod välj en:"),
+        (UiText::PleaseChooseOne, "Välj en:"),
         (UiText::PleaseChooseCategory, "Välj en kategori för:"),
         (
             UiText::GeneratingReplaceOld1,
@@ -99,8 +98,11 @@ pub fn swedish() -> HashMap<UiText, &'static str> {
         ),
         (UiText::GeneratingReplaceOld2, "ta bort den gamla."),
         (UiText::GeneratingReplaceOld3, "Gör ny lista?"),
-        (UiText::DeletingAys1, "Deleting:"),
-        (UiText::DeletingAys2, "Are You Sure?"),
+        (UiText::DeletingAys1, "Tar Bort:"),
+        (UiText::DeletingAys2, "Är du säker?"),
+        (UiText::PPEnterDishName, "Skriv Rättens Namn"),
+        (UiText::PPEnterIngredient, "Lägg till Ingrediens"),
+
 
         //CATEGORIES
         (UiText::Vegetables, "Grönsaker"),
@@ -113,7 +115,7 @@ pub fn swedish() -> HashMap<UiText, &'static str> {
         //TOOLTIPS
         (
             UiText::TTInputBox,
-            "[enter] bekräfa   [del] ta bort   [ctrl+s] spara   [esc] avbryt",
+            "[enter] bekräfta   [del] ta bort   [ctrl+s] spara   [esc] avbryt",
         ),
         (
             UiText::TTViewingDb,
@@ -123,10 +125,10 @@ pub fn swedish() -> HashMap<UiText, &'static str> {
             UiText::TTEditingDish,
             "[up/down] välj [enter] redigera [ctrl+n] namn [ctrl+a] lägg till  [ctrl+k] kategori [del] ta bort [esc] avbryt",
         ),
-        (UiText::TTEditingIngDName, "[enter] bekräfa   [esc] avbryt"),
+        (UiText::TTEditingIngDName, "[enter] bekräfta   [esc] avbryt"),
         (
             UiText::TTPopUp,
-            "[up/down] välj   [enter] bekräfa   [esc] avbryt",
+            "[up/down] välj   [enter] bekräfta   [esc] avbryt",
         ),
         (
             UiText::TTShowGenList,
@@ -138,11 +140,8 @@ pub fn swedish() -> HashMap<UiText, &'static str> {
         ),
         (
             UiText::TTPromtPrint,
-            "[up/down] välj   [enter] bekräfa   [p] exportera   [esc] avbryt",
+            "[up/down] välj   [enter] bekräfta   [p] exportera   [esc] avbryt",
         ),
-        //POPUPS
-        (UiText::PPEnterDishName, "Skriv Rättens Namn"),
-        (UiText::PPEnterIngredient, "Lägg till Ingrediens"),
         
         
     ])
@@ -156,8 +155,8 @@ pub fn english() -> HashMap<UiText, &'static str> {
         (UiText::AddToDishtabase, "Add Dish to Dishtabase"),
         (UiText::ViewEditDishtabase, "View/Edit Dishtabase"),
         //NEW LIST TEXT
-        (UiText::NoDishesInDishtabase, "Inga Rätter i Matabas!"),
-        (UiText::HowManyDishes, "Hur Många Rätter?"),
+        (UiText::NoDishesInDishtabase, "No Dishes in Dishtabase!"),
+        (UiText::HowManyDishes, "How many dishes?"),
         (UiText::OnlyEnterNums, "Please only enter Numbers"),
         (UiText::Menu, "Menu"),
         (UiText::GeneratedList, "Generated List"),
@@ -185,6 +184,8 @@ pub fn english() -> HashMap<UiText, &'static str> {
         (UiText::GeneratingReplaceOld3, "Make new list?"),
         (UiText::DeletingAys1, "Deleting:"),
         (UiText::DeletingAys2, "Are You Sure?"),
+        (UiText::PPEnterDishName, "Enter the Dish Name"),
+        (UiText::PPEnterIngredient, "Enter Ingredient"),
         
         //CATEGORIES
         (UiText::Vegetables, "Vegetables"),
@@ -194,6 +195,7 @@ pub fn english() -> HashMap<UiText, &'static str> {
         (UiText::Pantry, "Pantry"),
         (UiText::Spices, "Spices"),
         (UiText::Misc, "Misc"),
+        
         //TOOLTIPS
         (
             UiText::TTInputBox,
@@ -224,8 +226,7 @@ pub fn english() -> HashMap<UiText, &'static str> {
             UiText::TTPromtPrint,
             "[up/down] select   [enter] confirm   [p] print   [esc] cancel",
         ),
-        (UiText::PPEnterDishName, "Enter the Dish Name"),
-        (UiText::PPEnterIngredient, "Enter Ingredient"),
+        
         
         
     ])

@@ -9,7 +9,7 @@ use ratatui::{Frame, layout::Rect};
 use crate::app;
 use crate::items::Category;
 use crate::locale::UiText;
-use crate::{AppState, ui};
+use crate::{AppState, };
 
 pub fn new_list(window: &mut Frame, rect: Rect, app: &mut app::App) {
     let chose_window = Layout::default()
@@ -333,13 +333,13 @@ pub fn show_generated_list_ingredients(window: &mut Frame, rect: Rect, app: &mut
             spans.push(Span::raw(space));
             spans.push(
                 Span::styled(
-                    ui::get_category_name(ing.category),
+                    app.get_category_name(ing.category),
                     Style::new().fg(Color::DarkGray),
                 )
                 .add_modifier(Modifier::BOLD),
             );
         } else if ing.category == prev_category {
-            let cat_count = ui::get_category_name(prev_category).len();
+            let cat_count = app.get_category_name(prev_category).len();
 
             while cs < cat_count {
                 space.push(' ');

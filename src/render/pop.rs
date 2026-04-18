@@ -7,7 +7,6 @@ use ratatui::{Frame, layout::Rect};
 
 use crate::app::{self, AppState};
 use crate::locale::UiText;
-use crate::ui;
 
 pub fn are_you_sure(window: &mut Frame, rect: Rect, app: &mut app::App, msg: Vec<Line>) {
     let del_window = Layout::default()
