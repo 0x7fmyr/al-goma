@@ -416,7 +416,7 @@ pub fn right(window: &mut Frame, rect: Rect, app: &mut app::App) {
             let deleting_name = app.db.dishes[app.db_cursor.cursor].name.clone();
             let msg = vec![
                 Line::from(format!(
-                    "{}: {}",
+                    "{} {}",
                     app.text_get(UiText::DeletingAys1),
                     deleting_name
                 )),

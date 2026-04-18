@@ -15,7 +15,7 @@ pub enum Space {
     MainRight,
 }
 
-#[derive(Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone, Copy)]
 pub enum Language {
     Eng,
     Swe,
@@ -84,6 +84,11 @@ impl App {
             text[&UiText::ViewEditDishtabase],
         ];
 
+        let ingredient_category_db = match load_settings().langauge {
+            Language::Eng => items::ingredient_category_db_eng(),
+            Language::Swe => items::ingredient_category_db_swe(),
+        };
+
         App {
             current_dish_list: list::load(),
             shopping_list: list::load_shopping_list_config(),
@@ -108,8 +113,8 @@ impl App {
             selected_space: Space::MainLeft,
             db: db::load(),
 
-            category_db: items::ingredient_category_db_eng(),
-            normalized_category_db: ingredient_category_db_eng()
+            category_db: ingredient_category_db.clone(),
+            normalized_category_db: ingredient_category_db
                 .into_iter()
                 .map(|(k, v)| (k.replace(' ', ""), v))
                 .collect(),
