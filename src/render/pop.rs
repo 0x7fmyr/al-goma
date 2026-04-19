@@ -6,6 +6,7 @@ use ratatui::widgets::{Block, BorderType::Rounded, Borders, Paragraph};
 use ratatui::{Frame, layout::Rect};
 
 use crate::app::{self, AppState};
+use crate::locale::UiText;
 
 pub fn are_you_sure(window: &mut Frame, rect: Rect, app: &mut app::App, msg: Vec<Line>) {
     let del_window = Layout::default()
@@ -34,17 +35,17 @@ pub fn are_you_sure(window: &mut Frame, rect: Rect, app: &mut app::App, msg: Vec
         del_window[1],
     );
 
-    let mut yes = Line::from("Yes");
-    let mut no = Line::from("No");
+    let mut yes = Line::from(app.text_get(UiText::Yes));
+    let mut no = Line::from(app.text_get(UiText::No));
 
     if app.ays_cursor == 0 {
         yes = Line::from(Span::styled(
-            "Yes",
+            app.text_get(UiText::Yes),
             Style::new().fg(Color::Red).add_modifier(Modifier::BOLD),
         ));
     } else {
         no = Line::from(Span::styled(
-            "No",
+            app.text_get(UiText::No),
             Style::new().fg(Color::Red).add_modifier(Modifier::BOLD),
         ));
     }
@@ -100,9 +101,9 @@ pub fn pick_category(
 
     if s == AppState::EnteringIngredients || s == AppState::AddToShoppingList {
         let msg = vec![
-            Line::from("I can't find a category for:"),
+            Line::from(app.text_get(UiText::CantFindCategory)),
             Line::from(app::uppercase_words(&name)).add_modifier(Modifier::BOLD),
-            Line::from("Please choose one:"),
+            Line::from(app.text_get(UiText::PleaseChooseOne)),
         ];
         window.render_widget(
             Paragraph::new(msg).alignment(Alignment::Center),
@@ -111,7 +112,7 @@ pub fn pick_category(
     }
     if s == AppState::EditingDish {
         let msg = vec![
-            Line::from("Please choose category for:"),
+            Line::from(app.text_get(UiText::PleaseChooseCategory)),
             Line::from(
                 app.db.dishes[app.db_cursor.cursor].ingredients[app.edit_cursor.cursor]
                     .name
@@ -126,13 +127,13 @@ pub fn pick_category(
     }
 
     let categories = [
-        "Misc",
-        "Vegetables",
-        "Fruit",
-        "Dairy",
-        "Protein",
-        "Pantry",
-        "Spices",
+        app.text_get(UiText::Misc),
+        app.text_get(UiText::Vegetables),
+        app.text_get(UiText::Fruit),
+        app.text_get(UiText::Dairy),
+        app.text_get(UiText::Protein),
+        app.text_get(UiText::Pantry),
+        app.text_get(UiText::Spices),
     ];
 
     let mut line: Vec<Line> = Vec::new();
@@ -226,42 +227,51 @@ pub fn print_txt_options(window: &mut Frame, rect: Rect, app: &mut app::App) {
                 .border_style(Style::default().fg(Color::LightBlue))
                 .border_type(Rounded)
                 .borders(Borders::ALL)
-                .title("Print txt")
+                .title(app.text_get(UiText::WriteTxt))
                 .title_alignment(Alignment::Center),
         ),
         rect,
     );
 
     window.render_widget(
-        Paragraph::new("Check if you want:").alignment(Alignment::Center),
+        Paragraph::new(app.text_get(UiText::CheckIfWant)).alignment(Alignment::Center),
         text[0],
     );
 
-    let mut options = ["[ ] Numbers", "[ ] Categories"];
+    let mut options = [
+        app.text_get(UiText::CheckNumNo),
+        app.text_get(UiText::CheckCategoryNo),
+    ];
 
     if app.text_options.0 {
-        options[0] = "[x] Numbers"
+        options[0] = app.text_get(UiText::CheckNumYes)
     }
 
     if app.text_options.1 {
-        options[1] = "[x] Categories"
+        options[1] = app.text_get(UiText::CheckCategoryYes)
     }
 
     let mut grey_options = vec![
-        Line::from(Span::styled(options[0], Style::new().fg(Color::DarkGray))),
-        Line::from(Span::styled(options[1], Style::new().fg(Color::DarkGray))),
+        Line::from(Span::styled(
+            options[0].clone(),
+            Style::new().fg(Color::DarkGray),
+        )),
+        Line::from(Span::styled(
+            options[1].clone(),
+            Style::new().fg(Color::DarkGray),
+        )),
     ];
 
     if app.ays_cursor == 0 {
         grey_options[0] = Line::from(Span::styled(
-            options[0],
+            options[0].clone(),
             Style::new()
                 .fg(Color::LightBlue)
                 .add_modifier(Modifier::BOLD),
         ));
     } else {
         grey_options[1] = Line::from(Span::styled(
-            options[1],
+            options[1].clone(),
             Style::new()
                 .fg(Color::LightBlue)
                 .add_modifier(Modifier::BOLD),

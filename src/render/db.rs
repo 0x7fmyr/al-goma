@@ -10,7 +10,7 @@ use ratatui::{Frame, layout::Rect};
 
 use super::pop;
 use crate::app::{self, AppState};
-use crate::ui;
+use crate::locale::UiText;
 
 pub fn edit_widow(window: &mut Frame, rect: Rect, app: &mut app::App) {
     let vertical_scroll = app.edit_cursor.scroll;
@@ -40,7 +40,7 @@ pub fn edit_widow(window: &mut Frame, rect: Rect, app: &mut app::App) {
         ),
         edit_window[0],
     );
-    let header = Line::from("Ingredients:")
+    let header = Line::from(app.text_get(UiText::IngredientsHeader))
         .add_modifier(Modifier::BOLD)
         .add_modifier(Modifier::UNDERLINED);
 
@@ -111,7 +111,7 @@ pub fn edit_widow(window: &mut Frame, rect: Rect, app: &mut app::App) {
         }
 
         items.push(Span::styled(
-            format!(" [{}]", ui::get_category_name(i.category)),
+            format!(" [{}]", app.get_category_name(i.category)),
             Style::new().fg(Color::DarkGray),
         ));
 
@@ -265,7 +265,7 @@ pub fn dish_database(window: &mut Frame, rect: Rect, app: &mut app::App) {
 
     window.render_widget(
         Paragraph::new(
-            Line::from("Dish Database")
+            Line::from(app.text_get(UiText::DishtabaseHeader))
                 .add_modifier(Modifier::BOLD)
                 .add_modifier(Modifier::UNDERLINED),
         )

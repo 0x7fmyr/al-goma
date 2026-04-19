@@ -1,6 +1,7 @@
 use crate::{
     app::{App, AppState, Space},
-    items,
+    items, 
+    locale::UiText,
 };
 
 #[derive(Debug, PartialEq, PartialOrd, Clone, Copy)]
@@ -155,6 +156,18 @@ impl App {
             },
         }
     }
+
+    pub fn get_category_name(&self, c: items::Category) -> String {
+        match c {
+            items::Category::Dairy => self.text_get(UiText::Dairy),
+            items::Category::Pantry => self.text_get(UiText::Pantry),
+            items::Category::Spices => self.text_get(UiText::Spices),
+            items::Category::Vegetables => self.text_get(UiText::Vegetables),
+            items::Category::Fruit => self.text_get(UiText::Fruit),
+            items::Category::Protein => self.text_get(UiText::Protein),
+            items::Category::Misc => self.text_get(UiText::Misc),
+        }
+    }
 }
 
 pub fn update_scroll(input: &mut Cursor) {
@@ -162,17 +175,5 @@ pub fn update_scroll(input: &mut Cursor) {
         input.scroll = input.cursor;
     } else if input.cursor >= input.scroll + input.visable_lines {
         input.scroll = input.cursor - input.visable_lines + 1;
-    }
-}
-
-pub fn get_category_name(c: items::Category) -> String {
-    match c {
-        items::Category::Dairy => String::from("Dairy"),
-        items::Category::Pantry => String::from("Pantry"),
-        items::Category::Spices => String::from("Spices"),
-        items::Category::Vegetables => String::from("Vegetables"),
-        items::Category::Fruit => String::from("Fruit"),
-        items::Category::Protein => String::from("Protein"),
-        items::Category::Misc => String::from("Misc"),
     }
 }

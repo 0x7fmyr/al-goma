@@ -21,10 +21,10 @@ mod app;
 mod db;
 mod items;
 mod list;
+mod locale;
 mod render;
 mod ui;
 
-//claude --resume ce8bf707-c036-400b-a940-359d721e90bc
 fn main() -> Result<(), Box<dyn Error>> {
     //set up
     enable_raw_mode()?;
@@ -92,7 +92,7 @@ fn run(
                 let chunks = Layout::default()
                     .direction(Direction::Horizontal)
                     .constraints([
-                        Constraint::Length(26),
+                        Constraint::Length(30),
                         Constraint::Length(2),
                         Constraint::Fill(1),
                     ])
@@ -127,7 +127,10 @@ fn run(
                     modifiers: KeyModifiers::CONTROL,
                     ..
                 } => {
-                    if app.pending_dish.is_some() {
+                    if app.pending_dish.is_some()
+                        && (matches!(app.state, AppState::EnteringIngredients)
+                            || matches!(app.state, AppState::EnteringIngredients))
+                    {
                         app.push_dish_to_db()
                     }
                 }
@@ -136,8 +139,11 @@ fn run(
                     modifiers: KeyModifiers::CONTROL,
                     ..
                 } => {
-                    app.state = app::AppState::EditingDishName;
-                    app.pending_dish = Some(app.db.dishes[app.db_cursor.cursor].to_owned());
+                    if matches!(app.state, AppState::ViewingDatabase) {
+                        app.state = app::AppState::EditingDishName;
+                        app.pending_dish = Some(app.db.dishes[app.db_cursor.cursor].to_owned());
+                        app.input = app.pending_dish.as_ref().unwrap().name.clone();
+                    }
                 }
                 KeyEvent {
                     code: KeyCode::Char('a'),
@@ -165,7 +171,11 @@ fn run(
                     code: KeyCode::Char('p'),
                     modifiers: KeyModifiers::CONTROL,
                     ..
-                } => app.state = AppState::PromptPrint,
+                } => {
+                    if matches!(app.state, AppState::ShowShoppingList) {
+                        app.state = AppState::PromptPrint
+                    }
+                }
                 //plain keypresses
                 KeyEvent { code, .. } => match code {
                     KeyCode::Char('q') => match app.state {
@@ -186,7 +196,7 @@ fn run(
                     KeyCode::Right => app.move_focus_right(),
                     KeyCode::Char('p') => {
                         if matches!(app.state, AppState::PromptPrint) {
-                            app::print_shopping_list_txt_file(
+                            app.print_shopping_list_txt_file(
                                 app.shopping_list.clone(),
                                 app.text_options.0,
                                 app.text_options.1,
