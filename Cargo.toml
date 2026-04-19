@@ -8,7 +8,7 @@ license = "MIT OR Apache-2.0"
 ratatui = "0.29"
 crossterm = "0.28"
 rand = "0.8"
-serde = { version = "1", features = ["derive"] }
-toml ="0.8"
-chrono= "0.4"
-
+serde = { version = "1", features = ["derive"], default-features = false }
+toml = "0.8"
+chrono = "0.4"
+postcard = { version = "1", features = ["use-std"] }
