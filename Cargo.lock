@@ -3,7 +3,7 @@
 version = 4
 
 [[package]]
-name = "albins_grocery_machine"
+name = "al-goma"
 version = "0.1.0"
 dependencies = [
  "chrono",
