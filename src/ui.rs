@@ -1,6 +1,6 @@
 use crate::{
     app::{App, AppState, Space},
-    items, 
+    items,
     locale::UiText,
 };
 
@@ -124,9 +124,12 @@ impl App {
             }
             Space::MainRight => match self.state {
                 AppState::ViewingDatabase | AppState::ShowShoppingList => {
-                    if self.shopping_list.is_empty() {
+                    if self.shopping_list.is_empty()
+                        && matches!(self.state, AppState::ShowShoppingList)
+                    {
                         return;
                     }
+
                     if self.db_cursor.cursor > 0 {
                         self.db_cursor.cursor -= 1;
                         update_scroll(&mut self.db_cursor);
