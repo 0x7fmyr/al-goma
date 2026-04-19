@@ -129,7 +129,10 @@ fn run(
                     modifiers: KeyModifiers::CONTROL,
                     ..
                 } => {
-                    if app.pending_dish.is_some() {
+                    if app.pending_dish.is_some()
+                        && (matches!(app.state, AppState::EnteringIngredients)
+                            || matches!(app.state, AppState::EnteringIngredients))
+                    {
                         app.push_dish_to_db()
                     }
                 }
@@ -139,8 +142,11 @@ fn run(
                     modifiers: KeyModifiers::CONTROL,
                     ..
                 } => {
-                    app.state = app::AppState::EditingDishName;
-                    app.pending_dish = Some(app.db.dishes[app.db_cursor.cursor].to_owned());
+                    if matches!(app.state, AppState::ViewingDatabase) {
+                        app.state = app::AppState::EditingDishName;
+                        app.pending_dish = Some(app.db.dishes[app.db_cursor.cursor].to_owned());
+                        app.input = app.pending_dish.as_ref().unwrap().name.clone();
+                    }
                 }
                 KeyEvent {
                     code: KeyCode::Char('a'),
@@ -168,7 +174,11 @@ fn run(
                     code: KeyCode::Char('p'),
                     modifiers: KeyModifiers::CONTROL,
                     ..
-                } => app.state = AppState::PromptPrint,
+                } => {
+                    if matches!(app.state, AppState::ShowShoppingList) {
+                        app.state = AppState::PromptPrint
+                    }
+                }
                 //plain keypresses
                 KeyEvent { code, .. } => match code {
                     KeyCode::Char('q') => match app.state {

@@ -148,6 +148,7 @@ impl App {
             | AppState::EnteringIngredients
             | AppState::EditingIngredient
             | AppState::EditingAddIngredient
+            | AppState::EditingDishName
             | AppState::NewList
             | AppState::AddToShoppingList => {
                 self.input.pop();
@@ -298,7 +299,11 @@ impl App {
             AppState::EnteringIngredients | AppState::EditingDish | AppState::ShowShoppingList => {
                 self.delete_ingredient()
             }
-            AppState::ViewingDatabase => self.state = AppState::AreYouSureDelDish,
+            AppState::ViewingDatabase => {
+                if !self.db.dishes.is_empty() {
+                    self.state = AppState::AreYouSureDelDish;
+                }
+            }
             AppState::ShowGeneratedList => self.generate_new_dish(),
             _ => {}
         }
