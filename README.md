@@ -120,7 +120,7 @@ All data is stored in `.config/` inside the project directory:
 - `.config/sh_list.toml` — your current shopping list
 - `.config/settings.toml` — language setting
 
-These are plain TOML files and can be edited by hand. Exported shopping lists are saved as `Shopping-Lists/Shopping_List-YYYY-MM-DD.txt` (subsequent exports the same day get a numbered suffix).
+These are plain TOML files and can be edited by hand. **Note:** data is stored relative to wherever you run the binary from, so always run it from the same directory. Exported shopping lists are saved as `Shopping-Lists/Shopping_List-YYYY-MM-DD.txt` (subsequent exports the same day get a numbered suffix).
 
 ---
 
