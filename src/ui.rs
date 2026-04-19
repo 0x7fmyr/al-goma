@@ -150,11 +150,10 @@ impl App {
                     }
                     self.picking_cursor -= 1
                 }
-                AppState::ShowGeneratedList => {
-                    if self.edit_cursor.cursor > 0 {
+                AppState::ShowGeneratedList
+                    if self.edit_cursor.cursor > 0 => {
                         self.edit_cursor.cursor -= 1;
                     }
-                }
                 _ => {}
             },
         }

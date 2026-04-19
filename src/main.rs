@@ -129,7 +129,7 @@ fn run(
                 } => {
                     if app.pending_dish.is_some()
                         && (matches!(app.state, AppState::EnteringIngredients)
-                            || matches!(app.state, AppState::EnteringIngredients))
+                            || matches!(app.state, AppState::EditingDishName))
                     {
                         app.push_dish_to_db()
                     }

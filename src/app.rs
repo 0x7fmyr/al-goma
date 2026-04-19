@@ -88,19 +88,17 @@ impl App {
 
         let load_shopping_list = list::load_shopping_list_config();
 
-        let load_current_dish_list: Option<Vec<Dish>>;
-
-        if load_shopping_list.is_empty() {
-            load_current_dish_list = None;
+        let load_current_dish_list: Option<Vec<Dish>> = if load_shopping_list.is_empty() {
+            None
         } else {
-            load_current_dish_list = list::load()
-        }
+            list::load()
+        };
 
         App {
             current_dish_list: load_current_dish_list,
             shopping_list: load_shopping_list,
             text_options: (false, false),
-            text: text,
+            text,
             cursor: 0,
 
             db_cursor: Cursor {
@@ -130,7 +128,7 @@ impl App {
             prev_state: None,
             input: String::new(),
             pending_dish: None,
-            left_window_actions: left_window_actions,
+            left_window_actions,
         }
     }
 
@@ -306,10 +304,8 @@ impl App {
             AppState::EnteringIngredients | AppState::EditingDish | AppState::ShowShoppingList => {
                 self.delete_ingredient()
             }
-            AppState::ViewingDatabase => {
-                if !self.db.dishes.is_empty() {
-                    self.state = AppState::AreYouSureDelDish;
-                }
+            AppState::ViewingDatabase if !self.db.dishes.is_empty() => {
+                self.state = AppState::AreYouSureDelDish;
             }
             AppState::ShowGeneratedList => self.generate_new_dish(),
             _ => {}
@@ -602,8 +598,7 @@ impl App {
     }
 
     pub fn text_get(&self, input: UiText) -> String {
-        let output = self.text.get(&input).expect("No Translation!").to_string();
-        output
+        self.text.get(&input).expect("No Translation!").to_string()
     }
 
     pub fn print_shopping_list_txt_file(
