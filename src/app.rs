@@ -84,15 +84,15 @@ impl App {
             text[&UiText::ViewEditDishtabase],
         ];
 
-        let ingredient_category_db = match load_settings().language {
-            Language::Eng => items::ingredient_category_db_eng(),
-            Language::Swe => items::ingredient_category_db_swe(),
-        };
+        // let ingredient_category_db = match load_settings().language {
+        //     Language::Eng => items::ingredient_category_db_eng(),
+        //     Language::Swe => items::ingredient_category_db_swe(),
+        // };
 
         let load_shopping_list = list::load_shopping_list_config();
 
         let load_current_dish_list: Option<Vec<Dish>>;
-        
+
         if load_shopping_list.is_empty() {
             load_current_dish_list = None;
         } else {
@@ -123,8 +123,8 @@ impl App {
             selected_space: Space::MainLeft,
             db: db::load(),
 
-            category_db: ingredient_category_db.clone(),
-            normalized_category_db: ingredient_category_db
+            category_db: items::ingredient_category_db().clone(),
+            normalized_category_db: items::ingredient_category_db()
                 .into_iter()
                 .map(|(k, v)| (k.replace(' ', ""), v))
                 .collect(),
