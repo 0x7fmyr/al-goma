@@ -84,10 +84,7 @@ impl App {
             text[&UiText::ViewEditDishtabase],
         ];
 
-        // let ingredient_category_db = match load_settings().language {
-        //     Language::Eng => items::ingredient_category_db_eng(),
-        //     Language::Swe => items::ingredient_category_db_swe(),
-        // };
+        let ingredient_category_db = items::build_ingredient_database();
 
         let load_shopping_list = list::load_shopping_list_config();
 
@@ -123,8 +120,8 @@ impl App {
             selected_space: Space::MainLeft,
             db: db::load(),
 
-            category_db: items::ingredient_category_db().clone(),
-            normalized_category_db: items::ingredient_category_db()
+            category_db: ingredient_category_db.clone(),
+            normalized_category_db: ingredient_category_db
                 .into_iter()
                 .map(|(k, v)| (k.replace(' ', ""), v))
                 .collect(),
@@ -521,6 +518,8 @@ impl App {
                 .unwrap()
                 .ingredients
                 .push(i.clone());
+
+            items::save_learned_categories(i);
         }
 
         if let Some(prev_state) = self.prev_state {
