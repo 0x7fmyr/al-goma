@@ -614,16 +614,16 @@ impl App {
     ) -> std::io::Result<()> {
         let s = self.make_txt_string(shopping_list, wants_categories, wants_index);
         let date = Utc::now().date_naive();
-        let mut file_name = format!("Shopping-Lists/Shopping_List-{}.txt", date);
+        let mut file_name = format!("shopping-lists/shopping_list-{}.txt", date);
 
-        fs::create_dir_all("Shopping-Lists/")?;
+        fs::create_dir_all("shopping-lists/")?;
 
         if fs::exists(file_name.clone()).unwrap() {
             let mut i = 2;
-            file_name = format!("Shopping-Lists/Shopping_List-{}({}).txt", date, i);
+            file_name = format!("shopping-lists/shopping_list-{}:{}.txt", date, i);
             while fs::exists(file_name.clone()).unwrap() {
                 i += 1;
-                file_name = format!("Shopping-Lists/Shopping_List-{}({}).txt", date, i);
+                file_name = format!("shopping-lists/shopping_list-{}:{}.txt", date, i);
             }
         }
 

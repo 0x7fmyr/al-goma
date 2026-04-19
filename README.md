@@ -1,6 +1,6 @@
 # al-goma — Albin's Grocery Machine
 
-A terminal-based meal planner and grocery list generator. Tell it what dishes you know how to cook, and it'll randomly pick a weekly menu and build a shopping list for you — sorted by category so you can actually navigate a grocery store like a human.
+A terminal-based meal planner and grocery list generator. Tell it what dishes you know how to cook, and it'll randomly pick a weekly menu and build a shopping list for you, sorted by category so you can actually navigate a grocery store like a human.
 
 Built in Rust with [ratatui](https://github.com/ratatui/ratatui).
 
@@ -12,11 +12,8 @@ Built in Rust with [ratatui](https://github.com/ratatui/ratatui).
 
 - Keeps a "Dishtabase" of your dishes and their ingredients
 - Randomly generates a menu from your dishes (you pick how many)
-- Builds a shopping list from the menu, deduplicating ingredients automatically
-- Categorizes ingredients (vegetables, fruit, dairy, protein, pantry, spices) so your list is sorted by grocery store section
-- Auto-detects ingredient categories from a built-in lookup database
-- Prompts you to pick a category manually when one can't be determined
-- Lets you manually add or remove items from the shopping list
+- Builds a shopping list from the menu
+- Categorizes ingredients so your list is sorted by grocery store section
 - Exports the shopping list to a `.txt` file with optional numbering and category grouping
 - Supports English and Swedish (set in `.config/settings.toml`)
 

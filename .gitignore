@@ -1,16 +1,13 @@
 /target
-
 /.config
-
-/Shopping-Lists
+/.data
+/shopping-lists
 
 dishes.toml
 dishes.toml.bak
 
 sh_list.toml
-
 list.toml
 
 demo.tape
-
 demo.gif
