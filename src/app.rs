@@ -89,9 +89,19 @@ impl App {
             Language::Swe => items::ingredient_category_db_swe(),
         };
 
+        let load_shopping_list = list::load_shopping_list_config();
+
+        let load_current_dish_list: Option<Vec<Dish>>;
+        
+        if load_shopping_list.is_empty() {
+            load_current_dish_list = None;
+        } else {
+            load_current_dish_list = list::load()
+        }
+
         App {
-            current_dish_list: list::load(),
-            shopping_list: list::load_shopping_list_config(),
+            current_dish_list: load_current_dish_list,
+            shopping_list: load_shopping_list,
             text_options: (false, false),
             text: text,
             cursor: 0,
