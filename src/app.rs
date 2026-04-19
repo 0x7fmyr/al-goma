@@ -1,4 +1,4 @@
-use crate::items::{self, Category, Database, Dish, ingredient_category_db_eng};
+use crate::items::{self, Category, Database, Dish};
 use crate::locale::UiText;
 use crate::ui;
 use crate::ui::Cursor;
@@ -23,7 +23,7 @@ pub enum Language {
 
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
 pub struct Settings {
-    pub langauge: Language,
+    pub language: Language,
 }
 
 #[derive(Debug, PartialEq, Clone, Copy)]
@@ -72,7 +72,7 @@ pub struct App {
 
 impl App {
     pub fn init() -> Self {
-        let text = match load_settings().langauge {
+        let text = match load_settings().language {
             Language::Eng => locale::english(),
             Language::Swe => locale::swedish(),
         };
@@ -84,7 +84,7 @@ impl App {
             text[&UiText::ViewEditDishtabase],
         ];
 
-        let ingredient_category_db = match load_settings().langauge {
+        let ingredient_category_db = match load_settings().language {
             Language::Eng => items::ingredient_category_db_eng(),
             Language::Swe => items::ingredient_category_db_swe(),
         };
@@ -725,7 +725,7 @@ fn load_settings() -> Settings {
         Ok(s) => s,
         Err(_) => {
             let default_settings = Settings {
-                langauge: Language::Eng,
+                language: Language::Eng,
             };
 
             let default = toml::to_string(&default_settings).expect("failed to serialize...");

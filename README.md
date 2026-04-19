@@ -4,18 +4,21 @@ A terminal-based meal planner and grocery list generator. Tell it what dishes yo
 
 Built in Rust with [ratatui](https://github.com/ratatui/ratatui).
 
-![demo placeholder](demo.gif)
+![demo](https://github.com/user-attachments/assets/f9eb4657-c074-4850-a060-b8bf82fd869e)
 
 ---
 
 ## What it does
 
-- Keeps a database of your dishes and their ingredients
-- Randomly generates a weekly menu from your dishes
+- Keeps a "Dishtabase" of your dishes and their ingredients
+- Randomly generates a menu from your dishes (you pick how many)
 - Builds a shopping list from the menu, deduplicating ingredients automatically
-- Categorizes ingredients (vegetables, dairy, protein, dry goods, etc.) so your list is sorted by grocery store section
+- Categorizes ingredients (vegetables, fruit, dairy, protein, pantry, spices) so your list is sorted by grocery store section
+- Auto-detects ingredient categories from a built-in lookup database
+- Prompts you to pick a category manually when one can't be determined
 - Lets you manually add or remove items from the shopping list
 - Exports the shopping list to a `.txt` file with optional numbering and category grouping
+- Supports English and Swedish (set in `.config/settings.toml`)
 
 ---
 
@@ -29,7 +32,7 @@ cd al-goma
 cargo run --release
 ```
 
-Requires a terminal that's at least 75x20.
+Requires a terminal that's at least 75×20.
 
 ---
 
@@ -42,16 +45,40 @@ Requires a terminal that's at least 75x20.
 | `Enter` | Select |
 | `q` | Quit |
 
-### Dish database
+### New list / input fields
+| Key | Action |
+|-----|--------|
+| Type | Enter text |
+| `Enter` | Confirm |
+| `Backspace` | Delete character |
+| `Del` | Remove last ingredient |
+| `Ctrl+S` | Save dish to Dishtabase |
+| `Esc` | Cancel |
+
+### Generated list
+| Key | Action |
+|-----|--------|
+| `Enter` | Accept list → go to shopping list |
+| `Del` | Re-roll a single dish |
+| `Esc` | Cancel |
+
+### Dishtabase — dish list
 | Key | Action |
 |-----|--------|
 | `↑ / ↓` | Select dish |
-| `Enter` | Edit dish |
-| `Del` | Delete dish |
+| `Enter` | Open dish |
+| `Del` | Delete dish (with confirmation) |
+| `Esc` | Back |
+
+### Dishtabase — editing a dish
+| Key | Action |
+|-----|--------|
+| `↑ / ↓` | Select ingredient |
+| `Enter` | Edit selected ingredient |
 | `Ctrl+N` | Rename dish |
 | `Ctrl+A` | Add ingredient |
 | `Ctrl+K` | Change ingredient category |
-| `Ctrl+S` | Save dish |
+| `Del` | Remove selected ingredient |
 | `Esc` | Back |
 
 ### Shopping list
@@ -60,20 +87,40 @@ Requires a terminal that's at least 75x20.
 | `↑ / ↓` | Navigate |
 | `Del` | Remove item |
 | `Ctrl+A` | Add item |
-| `Ctrl+P` | Export to txt |
+| `Ctrl+P` | Export options |
 | `Esc` | Back |
+
+### Export options
+| Key | Action |
+|-----|--------|
+| `↑ / ↓` | Select option |
+| `Enter` | Toggle option (numbers / categories) |
+| `p` | Write `.txt` file |
+| `Esc` | Cancel |
+
+---
+
+## Language
+
+The UI language is set in `.config/settings.toml`:
+
+```toml
+language = "Eng"   # or "Swe"
+```
+
+The file is created automatically on first run (defaults to English).
 
 ---
 
 ## Data
 
-All data is saved in `.config/` inside the project directory:
+All data is stored in `.config/` inside the project directory:
 
-- `.config/dishes.toml` — your dish database
-- `.config/list.toml` — the current generated menu
-- `.config/sh_list.toml` — your shopping list
+- `.config/dishes.toml` — your Dishtabase
+- `.config/sh_list.toml` — your current shopping list
+- `.config/settings.toml` — language setting
 
-These are plain TOML files so you can edit them by hand if you want. Exported shopping lists are saved as `Shopping_List-YYYY-MM-DD.txt` in the project root.
+These are plain TOML files and can be edited by hand. Exported shopping lists are saved as `Shopping-Lists/Shopping_List-YYYY-MM-DD.txt` (subsequent exports the same day get a numbered suffix).
 
 ---
 

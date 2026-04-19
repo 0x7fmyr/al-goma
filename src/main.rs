@@ -25,7 +25,6 @@ mod locale;
 mod render;
 mod ui;
 
-//claude --resume ce8bf707-c036-400b-a940-359d721e90bc
 fn main() -> Result<(), Box<dyn Error>> {
     //set up
     enable_raw_mode()?;
@@ -124,7 +123,6 @@ fn run(
             match key {
                 //mod presses
                 KeyEvent {
-                    //todo! fix this is a global command no good
                     code: KeyCode::Char('s'),
                     modifiers: KeyModifiers::CONTROL,
                     ..
@@ -137,7 +135,6 @@ fn run(
                     }
                 }
                 KeyEvent {
-                    //todo! fix this is a global command no good
                     code: KeyCode::Char('n'),
                     modifiers: KeyModifiers::CONTROL,
                     ..
