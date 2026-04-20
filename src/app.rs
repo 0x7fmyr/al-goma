@@ -42,6 +42,7 @@ pub enum AppState {
     NewList,
     ReplaceList,
     ShowGeneratedList,
+    AddToGeneratedList,
     ShowShoppingList,
     AddToShoppingList,
     PromptPrint,
@@ -213,6 +214,11 @@ impl App {
                     self.selected_space = Space::MainLeft
                 }
             }
+            AppState::AddToGeneratedList => {
+                self.manual_add_dish_to_shoppinglist();
+                self.state = self.prev_state.unwrap();
+                self.prev_state = None;
+            }
             AppState::ShowGeneratedList => {
                 self.state = AppState::ShowShoppingList;
                 self.cursor = 1;
@@ -286,7 +292,12 @@ impl App {
         } else if matches!(self.state, AppState::AddToShoppingList) {
             self.state = AppState::ShowShoppingList;
             self.input.clear();
-        } else {
+        }else if matches!(self.state, AppState::AddToGeneratedList) {
+            self.state = self.prev_state.unwrap();
+                self.prev_state = None;
+                self.db_cursor.cursor = 0;
+        } 
+        else {
             self.state = AppState::Normal;
             self.selected_space = Space::MainLeft;
 
@@ -330,6 +341,12 @@ impl App {
 
         self.state = AppState::EnteringDishName;
         self.input.clear();
+    }
+
+    fn manual_add_dish_to_shoppinglist(&mut self) {
+        if let Some(dish_list) = self.current_dish_list.as_mut() {
+            dish_list.push(self.db.dishes[self.db_cursor.cursor].clone());
+        }
     }
 
     fn add_to_shopping_list(&mut self) {

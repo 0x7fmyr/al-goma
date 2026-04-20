@@ -65,7 +65,7 @@ impl App {
                         update_scroll(&mut self.db_cursor);
                     }
                 }
-                AppState::ViewingDatabase => {
+                AppState::ViewingDatabase | AppState::AddToGeneratedList => {
                     if self.db.dishes.is_empty() {
                         return;
                     }
@@ -123,7 +123,7 @@ impl App {
                 self.cursor -= 1;
             }
             Space::MainRight => match self.state {
-                AppState::ViewingDatabase | AppState::ShowShoppingList => {
+                AppState::ViewingDatabase | AppState::ShowShoppingList | AppState::AddToGeneratedList => {
                     if self.shopping_list.is_empty()
                         && matches!(self.state, AppState::ShowShoppingList)
                     {

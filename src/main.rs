@@ -152,6 +152,9 @@ fn run(
                 } => {
                     if app.state == AppState::EditingDish {
                         app.state = AppState::EditingAddIngredient;
+                    } else if app.state == AppState::ShowGeneratedList {
+                        app.prev_state = Some(app.state);
+                        app.state = AppState::AddToGeneratedList
                     } else if app.state == AppState::ShowShoppingList {
                         app.state = AppState::AddToShoppingList
                     }

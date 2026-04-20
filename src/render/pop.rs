@@ -6,6 +6,7 @@ use ratatui::widgets::{Block, BorderType::Rounded, Borders, Paragraph};
 use ratatui::{Frame, layout::Rect};
 
 use crate::app::{self, AppState};
+use crate::items::Dish;
 use crate::locale::UiText;
 
 pub fn are_you_sure(window: &mut Frame, rect: Rect, app: &mut app::App, msg: Vec<Line>) {
@@ -81,6 +82,83 @@ pub fn are_you_sure(window: &mut Frame, rect: Rect, app: &mut app::App, msg: Vec
                 .title_alignment(Alignment::Center),
         ),
         rect,
+    );
+}
+
+pub fn add_to_generated_list(window: &mut Frame, rect: Rect, app: &mut app::App) {
+    let popup = Layout::default()
+        .constraints([Constraint::Fill(1)])
+        .split(rect);
+
+    let inner_window = Layout::default()
+        .constraints([Constraint::Fill(1)])
+        .split(popup[0].inner(Margin {
+            horizontal: 2,
+            vertical: 2,
+        }));
+
+    let mut db: Vec<Line> = Vec::new();
+    let mut name: Vec<Span> = Vec::new();
+    let mut name_num: usize;
+
+    for (i, d) in app.db.dishes.iter().enumerate() {
+        name_num = i + 1;
+
+        
+        if app.db_cursor.cursor == i {
+            name.push(Span::styled(
+                " > ",
+                Style::new()
+                    .fg(Color::LightBlue)
+                    .add_modifier(Modifier::BOLD).add_modifier(Modifier::SLOW_BLINK),
+            ));
+            
+            name.push(Span::styled(
+                format!("{}. ", name_num),
+                Style::new()
+                    .fg(Color::LightBlue)
+                    .add_modifier(Modifier::BOLD),
+            ));
+            
+            name.push(Span::styled(
+                d.name.clone(),
+                Style::new()
+                    .fg(Color::LightBlue)
+                    .add_modifier(Modifier::BOLD),
+            ));
+        } else {
+            name.push(Span::styled(
+                format!("{}. ", name_num),
+                Style::new()
+                    .fg(Color::DarkGray)
+                    .add_modifier(Modifier::BOLD),
+            ));
+
+            name.push(Span::raw(d.name.clone()));
+        }
+
+        db.push(Line::from(name.clone()));
+        name.clear();
+    }
+
+    window.render_widget(
+        Paragraph::default().block(
+            Block::bordered()
+                .border_type(Rounded)
+                .title(app.text_get(UiText::DishtabaseHeader))
+                .title_alignment(Alignment::Center)
+                .border_style(Style::new().fg(Color::LightBlue)),
+        ),
+        popup[0],
+    );
+
+    window.render_widget(
+        Paragraph::new(db).block(
+            Block::bordered()
+                .border_type(Rounded)
+                .border_style(Style::new().fg(Color::DarkGray).dim()),
+        ),
+        inner_window[0],
     );
 }
 

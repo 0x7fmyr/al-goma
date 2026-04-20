@@ -150,7 +150,9 @@ pub fn right(window: &mut Frame, rect: Rect, app: &mut app::App) {
         }
     }
 
-    if matches!(app.state, AppState::ShowGeneratedList) {
+    if matches!(app.state, AppState::ShowGeneratedList)
+        || matches!(app.state, AppState::AddToGeneratedList)
+    {
         let w: u16 = 40;
         let h: u16 = 20;
         let center_y = rect.y + (rect.height / 2) - (h / 2);
@@ -176,6 +178,44 @@ pub fn right(window: &mut Frame, rect: Rect, app: &mut app::App) {
             },
             app,
         );
+
+        if matches!(app.state, AppState::AddToGeneratedList) {
+            let mut input_w: u16 = 50;
+            let mut input_h: u16 = 14;
+            let center_y: u16;
+            let center_x: u16;
+
+            if rect.height >= 40 || rect.width >= 40 {
+                center_y = rect.y + (rect.height / 2) - (input_h / 2);
+                center_x = rect.x + (rect.width / 2) - (input_w / 2);
+            } else {
+                center_y = 0;
+                center_x = 0;
+                input_h = 0;
+                input_w = 0;
+            }
+
+            window.render_widget(
+                Clear,
+                Rect {
+                    x: center_x,
+                    y: center_y,
+                    width: input_w,
+                    height: input_h,
+                },
+            );
+
+            pop::add_to_generated_list(
+                window,
+                Rect {
+                    x: center_x,
+                    y: center_y,
+                    width: input_w,
+                    height: input_h,
+                },
+                app,
+            );
+        }
     }
 
     if matches!(app.state, AppState::ShowShoppingList)

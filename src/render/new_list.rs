@@ -6,10 +6,10 @@ use ratatui::widgets::{Block, BorderType::Rounded, Borders, Paragraph};
 use ratatui::widgets::{Scrollbar, ScrollbarOrientation, ScrollbarState};
 use ratatui::{Frame, layout::Rect};
 
+use crate::AppState;
 use crate::app;
 use crate::items::Category;
 use crate::locale::UiText;
-use crate::{AppState, };
 
 pub fn new_list(window: &mut Frame, rect: Rect, app: &mut app::App) {
     let chose_window = Layout::default()
@@ -212,11 +212,16 @@ pub fn show_generated_list(window: &mut Frame, rect: Rect, app: &mut app::App) {
         }),
         &mut scrollbar_state,
     );
+    let style: Style = if matches!(app.state, AppState::ShowGeneratedList) {
+        Style::default().fg(Color::Blue)
+    } else {
+        Style::default().fg(Color::Blue).dim().dim()
+    };
 
     window.render_widget(
         Paragraph::default().alignment(Alignment::Left).block(
             Block::bordered()
-                .border_style(Style::default().fg(Color::Blue))
+                .border_style(style)
                 .border_type(Rounded)
                 .borders(Borders::ALL)
                 .title(app.text_get(UiText::GeneratedList))
