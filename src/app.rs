@@ -292,12 +292,11 @@ impl App {
         } else if matches!(self.state, AppState::AddToShoppingList) {
             self.state = AppState::ShowShoppingList;
             self.input.clear();
-        }else if matches!(self.state, AppState::AddToGeneratedList) {
+        } else if matches!(self.state, AppState::AddToGeneratedList) {
             self.state = self.prev_state.unwrap();
-                self.prev_state = None;
-                self.db_cursor.cursor = 0;
-        } 
-        else {
+            self.prev_state = None;
+            self.db_cursor.cursor = 0;
+        } else {
             self.state = AppState::Normal;
             self.selected_space = Space::MainLeft;
 

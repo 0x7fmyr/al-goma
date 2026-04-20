@@ -59,6 +59,8 @@ impl App {
     }
 
     pub fn generate_new_dish(&mut self) {
+        
+        
         let mut rng = rand::thread_rng();
         let selected_dish = self.edit_cursor.cursor;
 
@@ -67,6 +69,11 @@ impl App {
             let rand_dish = self.db.dishes[i].clone();
 
             if let Some(list) = self.current_dish_list.as_mut() {
+                
+                if list.len() == self.db.dishes.len(){
+                    return;
+                }
+                
                 if list[selected_dish].name == rand_dish.name {
                     continue;
                 }
