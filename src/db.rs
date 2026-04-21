@@ -2,7 +2,11 @@ use crate::items::Database;
 use std::fs;
 
 pub fn load() -> Database {
-    let contents = match fs::read_to_string(".config/dishes.toml") {
+    let config_folder = dirs::config_dir()
+        .expect("failed to find config path...")
+        .join("al-goma/");
+
+    let contents = match fs::read_to_string(config_folder.join("dishes.toml")) {
         Ok(s) => s,
         Err(_) => return Database { dishes: vec![] },
     };
@@ -10,8 +14,12 @@ pub fn load() -> Database {
 }
 
 pub fn save(db: &Database) {
+    let config_folder = dirs::config_dir()
+        .expect("failed to find config path...")
+        .join("al-goma/");
+
     let contents = toml::to_string(db).expect("failed to serialize...");
 
-    fs::create_dir_all(".config/").expect("failed to make dir: .config");
-    fs::write(".config/dishes.toml", contents).expect("failed to write file...")
+    fs::create_dir_all(config_folder.clone()).expect("failed to make dir: .config");
+    fs::write(config_folder.join("dishes.toml"), contents).expect("failed to write file...")
 }

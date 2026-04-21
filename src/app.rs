@@ -741,7 +741,11 @@ pub fn uppercase_words(data: &str) -> String {
 }
 
 fn load_settings() -> Settings {
-    let settings = match fs::read_to_string(".config/settings.toml") {
+    let config_folder = dirs::config_dir()
+        .expect("failed to find config path...")
+        .join("al-goma/");
+
+    let settings = match fs::read_to_string(config_folder.join("settings.toml")) {
         Ok(s) => s,
         Err(_) => {
             let default_settings = Settings {
@@ -750,8 +754,9 @@ fn load_settings() -> Settings {
 
             let default = toml::to_string(&default_settings).expect("failed to serialize...");
 
-            fs::create_dir_all(".config/").expect("failed to make dir: .config");
-            fs::write(".config/settings.toml", default).expect("failed to write file...");
+            fs::create_dir_all(config_folder.clone()).expect("failed to make dir config dir...");
+            fs::write(config_folder.join("settings.toml"), default)
+                .expect("failed to write file...");
 
             return default_settings;
         }

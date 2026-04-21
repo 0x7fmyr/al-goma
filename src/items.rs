@@ -33,8 +33,12 @@ pub struct Database {
 }
 
 pub fn save_learned_categories(i: Ingredient) {
+    let data_folder = dirs::data_dir()
+        .expect("failed to find data path...")
+        .join("al-goma/");
+
     let mut learned_categories: HashMap<String, Category> =
-        match fs::read(".data/added_item_categories.bin") {
+        match fs::read(data_folder.join("added_item_categories.bin")) {
             Ok(bytes) => {
                 postcard::from_bytes(&bytes).expect("added_item_categories.bin is corrupted")
             }
@@ -42,21 +46,27 @@ pub fn save_learned_categories(i: Ingredient) {
         };
 
     learned_categories.insert(i.name.to_lowercase(), i.category);
+    
 
     let bytes =
         postcard::to_stdvec(&learned_categories).expect("failed to serialize learned categories");
 
-    fs::create_dir_all(".data/").expect("failed to make dir: .data");
+    fs::create_dir_all(data_folder.clone()).expect("failed to make dir: .data");
 
-    fs::write(".data/added_item_categories.bin", bytes)
+    fs::write(data_folder.join("added_item_categories.bin"), bytes)
         .expect("failed to write .data/added_item_categories.bin");
+    
 }
 
 pub fn build_ingredient_database() -> HashMap<String, Category> {
     let mut database = ingredient_category_db();
 
+    let data_folder = dirs::data_dir()
+        .expect("failed to find data path...")
+        .join("al-goma/");
+
     let learned_categories: HashMap<String, Category> =
-        match fs::read(".data/added_item_categories.bin") {
+        match fs::read(data_folder.join("added_item_categories.bin")) {
             Ok(bytes) => {
                 postcard::from_bytes(&bytes).expect("added_item_categories.bin is corrupted")
             }

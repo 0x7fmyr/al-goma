@@ -111,7 +111,7 @@ pub fn save_list(list: Option<Vec<Dish>>) {
         let save_file = Database { dishes: save_list };
         let contents = toml::to_string(&save_file).expect("failed to serialize...");
 
-        fs::create_dir_all(config_folder.clone()).expect("failed to make dir: .config");
+        fs::create_dir_all(config_folder.clone()).expect("failed to make config dir");
 
         fs::write(config_folder.join("list.toml"), contents).expect("failed to write file...")
     }
