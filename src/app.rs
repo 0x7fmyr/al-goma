@@ -1,4 +1,4 @@
-use crate::items::{self, Category, Database, Dish};
+use crate::items::{self, Category, Database, Dish, build_ingredient_database};
 use crate::locale::UiText;
 use crate::ui;
 use crate::ui::Cursor;
@@ -532,6 +532,7 @@ impl App {
                 .push(i.clone());
 
             items::save_learned_categories(i);
+            self.category_db = items::build_ingredient_database();
         }
 
         if let Some(prev_state) = self.prev_state {
