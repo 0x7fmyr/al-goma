@@ -6,7 +6,6 @@ use ratatui::widgets::{Block, BorderType::Rounded, Borders, Paragraph};
 use ratatui::{Frame, layout::Rect};
 
 use crate::app::{self, AppState};
-use crate::items::Dish;
 use crate::locale::UiText;
 
 pub fn are_you_sure(window: &mut Frame, rect: Rect, app: &mut app::App, msg: Vec<Line>) {
@@ -104,22 +103,22 @@ pub fn add_to_generated_list(window: &mut Frame, rect: Rect, app: &mut app::App)
     for (i, d) in app.db.dishes.iter().enumerate() {
         name_num = i + 1;
 
-        
         if app.db_cursor.cursor == i {
             name.push(Span::styled(
                 " > ",
                 Style::new()
                     .fg(Color::LightBlue)
-                    .add_modifier(Modifier::BOLD).add_modifier(Modifier::SLOW_BLINK),
+                    .add_modifier(Modifier::BOLD)
+                    .add_modifier(Modifier::SLOW_BLINK),
             ));
-            
+
             name.push(Span::styled(
                 format!("{}. ", name_num),
                 Style::new()
                     .fg(Color::LightBlue)
                     .add_modifier(Modifier::BOLD),
             ));
-            
+
             name.push(Span::styled(
                 d.name.clone(),
                 Style::new()

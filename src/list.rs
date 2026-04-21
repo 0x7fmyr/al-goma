@@ -1,5 +1,6 @@
 use crate::app::{App, AppState};
 use crate::items::{Database, Dish, Ingredient};
+use dirs;
 use std::collections::HashSet;
 use std::fs;
 
@@ -59,8 +60,6 @@ impl App {
     }
 
     pub fn generate_new_dish(&mut self) {
-        
-        
         let mut rng = rand::thread_rng();
         let selected_dish = self.edit_cursor.cursor;
 
@@ -69,11 +68,10 @@ impl App {
             let rand_dish = self.db.dishes[i].clone();
 
             if let Some(list) = self.current_dish_list.as_mut() {
-                
-                if list.len() == self.db.dishes.len(){
+                if list.len() == self.db.dishes.len() {
                     return;
                 }
-                
+
                 if list[selected_dish].name == rand_dish.name {
                     continue;
                 }
@@ -105,11 +103,17 @@ fn make_shopping_list(list: Option<Vec<Dish>>, shopping_list: &mut Vec<Ingredien
 }
 
 pub fn save_list(list: Option<Vec<Dish>>) {
+    let config_folder = dirs::config_dir()
+        .expect("failed to find config path...")
+        .join("al-goma/");
+
     if let Some(save_list) = list {
         let save_file = Database { dishes: save_list };
         let contents = toml::to_string(&save_file).expect("failed to serialize...");
-        fs::create_dir_all(".config/").expect("failed to make dir: .config");
-        fs::write(".config/list.toml", contents).expect("failed to write file...")
+
+        fs::create_dir_all(config_folder.clone()).expect("failed to make dir: .config");
+
+        fs::write(config_folder.join("list.toml"), contents).expect("failed to write file...")
     }
 }
 
@@ -125,12 +129,21 @@ pub fn save_shopping_list_config(shopping_list: Vec<Ingredient>) {
 
     let contents = toml::to_string(&save_file).expect("failed to serialize...");
 
-    fs::create_dir_all(".config/").expect("failed to make dir: .config");
-    fs::write(".config/sh_list.toml", contents).expect("failed to write file...")
+    let config_folder = dirs::config_dir()
+        .expect("failed to find config path...")
+        .join("al-goma/");
+
+    fs::create_dir_all(config_folder.clone()).expect("failed to make config dir...");
+
+    fs::write(config_folder.join("sh_list.toml"), contents).expect("failed to write file...")
 }
 
 pub fn load_shopping_list_config() -> Vec<Ingredient> {
-    let contents = match fs::read_to_string(".config/sh_list.toml") {
+    let config_folder = dirs::config_dir()
+        .expect("failed to find config path...")
+        .join("al-goma/");
+
+    let contents = match fs::read_to_string(config_folder.clone().join("/sh_list.toml")) {
         Ok(s) => s,
         Err(_) => return vec![],
     };
@@ -140,7 +153,11 @@ pub fn load_shopping_list_config() -> Vec<Ingredient> {
 }
 
 pub fn load() -> Option<Vec<Dish>> {
-    let contents = match fs::read_to_string(".config/list.toml") {
+    let config_folder = dirs::config_dir()
+        .expect("failed to find config path...")
+        .join("al-goma/");
+
+    let contents = match fs::read_to_string(config_folder.clone().join("list.toml")) {
         Ok(s) => s,
         Err(_) => return None,
     };
