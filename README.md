@@ -99,7 +99,7 @@ Requires a terminal that's at least 75×20.
 
 ## Language
 
-The UI language is set in `.config/settings.toml`:
+The UI language is set in `~/.config/al-goma/settings.toml`:
 
 ```toml
 language = "Eng"   # or "Swe"
@@ -111,13 +111,16 @@ The file is created automatically on first run (defaults to English).
 
 ## Data
 
-All data is stored in `.config/` inside the project directory:
+| File | Location |
+|------|----------|
+| `dishes.toml` | `~/.config/al-goma/` |
+| `list.toml` | `~/.config/al-goma/` |
+| `sh_list.toml` | `~/.config/al-goma/` |
+| `settings.toml` | `~/.config/al-goma/` |
+| `added_item_categories.bin` | `~/.local/share/al-goma/` |
+| Exported lists | `~/Documents/shopping-lists/` |
 
-- `.config/dishes.toml` — your Dishtabase
-- `.config/sh_list.toml` — your current shopping list
-- `.config/settings.toml` — language setting
-
-These are plain TOML files and can be edited by hand. **Note:** data is stored relative to wherever you run the binary from, so always run it from the same directory. Exported shopping lists are saved as `Shopping-Lists/Shopping_List-YYYY-MM-DD.txt` (subsequent exports the same day get a numbered suffix).
+All TOML files are plain text and can be edited by hand. Exported lists are named `shopping_list-YYYY-MM-DD.txt` — same-day exports get a `:2`, `:3` suffix.
 
 ---
 

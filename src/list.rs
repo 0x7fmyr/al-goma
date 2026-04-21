@@ -143,7 +143,7 @@ pub fn load_shopping_list_config() -> Vec<Ingredient> {
         .expect("failed to find config path...")
         .join("al-goma/");
 
-    let contents = match fs::read_to_string(config_folder.clone().join("/sh_list.toml")) {
+    let contents = match fs::read_to_string(config_folder.clone().join("sh_list.toml")) {
         Ok(s) => s,
         Err(_) => return vec![],
     };

@@ -1,4 +1,4 @@
-use crate::items::{self, Category, Database, Dish, build_ingredient_database};
+use crate::items::{self, Category, Database, Dish};
 use crate::locale::UiText;
 use crate::ui;
 use crate::ui::Cursor;
@@ -626,20 +626,25 @@ impl App {
     ) -> std::io::Result<()> {
         let s = self.make_txt_string(shopping_list, wants_categories, wants_index);
         let date = Utc::now().date_naive();
-        let mut file_name = format!("shopping-lists/shopping_list-{}.txt", date);
 
-        fs::create_dir_all("shopping-lists/")?;
+        let shopping_list_folder = dirs::document_dir()
+            .expect("failed to find data path...")
+            .join("shopping-lists/");
 
-        if fs::exists(file_name.clone()).unwrap() {
+        let mut file_name = format!("shopping_list-{}.txt", date);
+
+        fs::create_dir_all(shopping_list_folder.clone())?;
+
+        if fs::exists(shopping_list_folder.join(file_name.clone())).unwrap() {
             let mut i = 2;
-            file_name = format!("shopping-lists/shopping_list-{}:{}.txt", date, i);
-            while fs::exists(file_name.clone()).unwrap() {
+            file_name = format!("shopping_list-{}:{}.txt", date, i);
+            while fs::exists(shopping_list_folder.join(file_name.clone())).unwrap() {
                 i += 1;
-                file_name = format!("shopping-lists/shopping_list-{}:{}.txt", date, i);
+                file_name = format!("shopping_list-{}:{}.txt", date, i);
             }
         }
 
-        fs::write(file_name, s)?;
+        fs::write(shopping_list_folder.join(file_name), s)?;
 
         Ok(())
     }
