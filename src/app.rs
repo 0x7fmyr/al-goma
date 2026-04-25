@@ -8,6 +8,7 @@ use chrono::Utc;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fs;
+use std::path::PathBuf;
 
 #[derive(Debug, PartialEq)]
 pub enum Space {
@@ -223,9 +224,9 @@ impl App {
             AppState::ShowGeneratedList => {
                 self.state = AppState::ShowShoppingList;
                 list::make_shopping_list(self.current_dish_list.clone(), &mut self.shopping_list);
-        
+
                 list::save_list(self.current_dish_list.clone());
-        
+
                 list::save_shopping_list_config(self.shopping_list.clone());
 
                 self.cursor = 1;
@@ -634,9 +635,25 @@ impl App {
         let s = self.make_txt_string(shopping_list, wants_categories, wants_index);
         let date = Utc::now().date_naive();
 
-        let shopping_list_folder = dirs::document_dir()
-            .expect("failed to find data path...")
-            .join("shopping-lists/");
+        let shopping_list_folder: PathBuf = if dirs::document_dir().is_some() {
+            dirs::document_dir()
+                .expect("failed to find document path...")
+                .join("shopping-lists/")
+        } else {
+            dirs::home_dir()
+                .expect("failed to find document path...")
+                .join("shopping-lists/")
+        };
+
+        // if dirs::document_dir().is_some() {
+        //     let shopping_list_folder = dirs::document_dir()
+        //         .expect("failed to find document path...")
+        //         .join("shopping-lists/");
+        // } else {
+        //     let shopping_list_folder = dirs::home_dir()
+        //         .expect("failed to find document path...")
+        //         .join("shopping-lists/");
+        // }
 
         let mut file_name = format!("shopping_list-{}.txt", date);
 
