@@ -19,14 +19,20 @@ Built in Rust with [ratatui](https://github.com/ratatui/ratatui).
 
 ---
 
-## Building and running
+## Installing
 
 You'll need Rust installed. If you don't have it: [rustup.rs](https://rustup.rs)
 
 ```bash
 git clone https://github.com/0x7fmyr/al-goma
 cd al-goma
-cargo run --release
+make install
+```
+
+To uninstall:
+
+```bash
+make uninstall
 ```
 
 Requires a terminal that's at least 75×20.

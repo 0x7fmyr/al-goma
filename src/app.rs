@@ -204,6 +204,9 @@ impl App {
                 self.moving_focus = false
             }
             AppState::NewList => {
+                if self.db.dishes.len() == 0 {
+                    return;
+                }
                 self.generate_list();
                 self.state = AppState::ShowGeneratedList
             }
