@@ -645,16 +645,6 @@ impl App {
                 .join("shopping-lists/")
         };
 
-        // if dirs::document_dir().is_some() {
-        //     let shopping_list_folder = dirs::document_dir()
-        //         .expect("failed to find document path...")
-        //         .join("shopping-lists/");
-        // } else {
-        //     let shopping_list_folder = dirs::home_dir()
-        //         .expect("failed to find document path...")
-        //         .join("shopping-lists/");
-        // }
-
         let mut file_name = format!("shopping_list-{}.txt", date);
 
         fs::create_dir_all(shopping_list_folder.clone())?;

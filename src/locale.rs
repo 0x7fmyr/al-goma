@@ -128,7 +128,7 @@ pub fn swedish() -> HashMap<UiText, &'static str> {
         ),
         (
             UiText::TTShowGenList,
-            "[enter] accept   [del] ny rätt   [esc] avbryt",
+            "[enter] accept   [del] ny rätt   [ctl+a] lägg till rätt   [esc] avbryt",
         ),
         (
             UiText::TTShowShoppingList,
@@ -205,7 +205,7 @@ pub fn english() -> HashMap<UiText, &'static str> {
         ),
         (
             UiText::TTShowGenList,
-            "[enter] accept   [del] new dish   [esc] cancel",
+            "[enter] accept   [del] new dish   [ctl+a] add dish   [esc] cancel",
         ),
         (
             UiText::TTShowShoppingList,
