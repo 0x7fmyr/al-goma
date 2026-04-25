@@ -15,7 +15,7 @@ Built in Rust with [ratatui](https://github.com/ratatui/ratatui).
 - Builds a shopping list from the menu
 - Categorizes ingredients so your list is sorted by grocery store section
 - Exports the shopping list to a `.txt` file with optional numbering and category grouping
-- Supports English and Swedish (set in `.config/settings.toml`)
+- Supports English and Swedish (set in `~/.config/al-goma/settings.toml`)
 
 ---
 
@@ -113,11 +113,7 @@ The file is created automatically on first run (defaults to English).
 
 | File | Location |
 |------|----------|
-| `dishes.toml` | `~/.config/al-goma/` |
-| `list.toml` | `~/.config/al-goma/` |
-| `sh_list.toml` | `~/.config/al-goma/` |
-| `settings.toml` | `~/.config/al-goma/` |
-| `added_item_categories.bin` | `~/.local/share/al-goma/` |
+| `config files` | `~/.config/al-goma/` |
 | Exported lists | `~/Documents/shopping-lists/` |
 
 All TOML files are plain text and can be edited by hand. Exported lists are named `shopping_list-YYYY-MM-DD.txt` — same-day exports get a `:2`, `:3` suffix.

@@ -204,6 +204,7 @@ impl App {
             }
             AppState::NewList => {
                 self.generate_list();
+                self.state = AppState::ShowGeneratedList
             }
             AppState::ReplaceList => {
                 if self.ays_cursor == 0 {
@@ -221,6 +222,12 @@ impl App {
             }
             AppState::ShowGeneratedList => {
                 self.state = AppState::ShowShoppingList;
+                list::make_shopping_list(self.current_dish_list.clone(), &mut self.shopping_list);
+        
+                list::save_list(self.current_dish_list.clone());
+        
+                list::save_shopping_list_config(self.shopping_list.clone());
+
                 self.cursor = 1;
             }
             AppState::AddToShoppingList => {

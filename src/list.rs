@@ -1,6 +1,5 @@
 use crate::app::{App, AppState};
 use crate::items::{Database, Dish, Ingredient};
-use dirs;
 use std::collections::HashSet;
 use std::fs;
 
@@ -47,16 +46,8 @@ impl App {
             i += 1
         }
 
-        self.current_dish_list.replace(found_dishes); // = Some(found_dishes);
-
-        make_shopping_list(self.current_dish_list.clone(), &mut self.shopping_list);
-
-        save_list(self.current_dish_list.clone());
-
-        save_shopping_list_config(self.shopping_list.clone());
-
+        self.current_dish_list.replace(found_dishes);
         self.input.clear();
-        self.state = AppState::ShowGeneratedList
     }
 
     pub fn generate_new_dish(&mut self) {
@@ -81,13 +72,14 @@ impl App {
                 }
 
                 list[selected_dish] = self.db.dishes[i].clone();
+
                 break;
             }
         }
     }
 }
 
-fn make_shopping_list(list: Option<Vec<Dish>>, shopping_list: &mut Vec<Ingredient>) {
+pub fn make_shopping_list(list: Option<Vec<Dish>>, shopping_list: &mut Vec<Ingredient>) {
     shopping_list.clear();
     if let Some(list) = list {
         let mut seen = HashSet::new();
