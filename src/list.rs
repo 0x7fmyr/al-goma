@@ -25,7 +25,7 @@ impl App {
             self.state = AppState::Normal;
             return;
         }
-
+    
         let mut found_dishes: Vec<Dish> = Vec::new();
         let mut i = 0;
 
