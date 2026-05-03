@@ -24,6 +24,7 @@ mod list;
 mod locale;
 mod render;
 mod ui;
+mod upload;
 
 fn main() -> Result<(), Box<dyn Error>> {
     //set up

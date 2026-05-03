@@ -3,10 +3,12 @@ use std::collections::HashMap;
 use serde::{Deserialize, Serialize};
 #[derive(Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum UiText {
+    //MENU
     NewList,
     ViewEditList,
     AddToDishtabase,
     ViewEditDishtabase,
+    Upload,
 
     //NEW LIST
     NoDishesInDishtabase,
@@ -68,6 +70,7 @@ pub fn swedish() -> HashMap<UiText, &'static str> {
         (UiText::ViewEditList, "Se/Ändra Lista"),
         (UiText::AddToDishtabase, "Lägg till Rätt i Matabas"),
         (UiText::ViewEditDishtabase, "Se/Ändra Matabas"),
+        (UiText::Upload, "Ladda Upp"),
         //NEW LIST TEXT
         (UiText::NoDishesInDishtabase, "Inga Rätter i Matabas!"),
         (UiText::HowManyDishes, "Hur Många Rätter?"),
@@ -148,6 +151,7 @@ pub fn english() -> HashMap<UiText, &'static str> {
         (UiText::ViewEditList, "View/Edit List"),
         (UiText::AddToDishtabase, "Add Dish to Dishtabase"),
         (UiText::ViewEditDishtabase, "View/Edit Dishtabase"),
+        (UiText::Upload, "Upload"),
         //NEW LIST TEXT
         (UiText::NoDishesInDishtabase, "No Dishes in Dishtabase!"),
         (UiText::HowManyDishes, "How many dishes?"),

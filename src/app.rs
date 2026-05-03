@@ -47,6 +47,7 @@ pub enum AppState {
     ShowShoppingList,
     AddToShoppingList,
     PromptPrint,
+    UploadMenu,
 }
 
 #[derive(Debug)]
@@ -84,6 +85,7 @@ impl App {
             text[&UiText::ViewEditList],
             text[&UiText::AddToDishtabase],
             text[&UiText::ViewEditDishtabase],
+            text[&UiText::Upload],
         ];
 
         let ingredient_category_db = items::build_ingredient_database();
@@ -200,7 +202,10 @@ impl App {
                     db::load();
                     self.state = AppState::ViewingDatabase;
                     self.selected_space = Space::MainRight;
+                } else if self.selected_space == Space::MainLeft && self.cursor == 4 {
+                    println!("bababoey!")
                 }
+
                 self.moving_focus = false
             }
             AppState::NewList => {
