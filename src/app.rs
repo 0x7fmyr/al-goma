@@ -1,9 +1,9 @@
 use crate::items::{self, Category, Database, Dish};
 use crate::locale::UiText;
-use crate::ui;
 use crate::ui::Cursor;
 use crate::{db, items::Ingredient};
 use crate::{list, locale};
+use crate::{ui, upload};
 use chrono::Utc;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -29,6 +29,7 @@ pub struct Settings {
 
 #[derive(Debug, PartialEq, Clone, Copy)]
 pub enum AppState {
+    Error,
     Normal,
     MovingFocus,
     EnteringDishName,
@@ -48,6 +49,7 @@ pub enum AppState {
     AddToShoppingList,
     PromptPrint,
     UploadMenu,
+    UploadFirstLogin,
 }
 
 #[derive(Debug)]
@@ -71,6 +73,7 @@ pub struct App {
     pub pending_dish: Option<Dish>,
     pub category_db: HashMap<String, Category>,
     pub normalized_category_db: HashMap<String, Category>,
+    pub err_msg: Option<&'static str>,
 }
 
 impl App {
@@ -133,6 +136,7 @@ impl App {
             input: String::new(),
             pending_dish: None,
             left_window_actions,
+            err_msg: None,
         }
     }
 
@@ -203,7 +207,14 @@ impl App {
                     self.state = AppState::ViewingDatabase;
                     self.selected_space = Space::MainRight;
                 } else if self.selected_space == Space::MainLeft && self.cursor == 4 {
-                    println!("bababoey!")
+                    match upload::does_token_exist() {
+                        Ok(true) => self.state = AppState::UploadMenu,
+                        Ok(false) => self.state = AppState::UploadFirstLogin,
+                        Err(s) => {
+                            self.state = AppState::Error;
+                            self.err_msg = Some(s)
+                        }
+                    }
                 }
 
                 self.moving_focus = false

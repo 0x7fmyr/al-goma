@@ -1,21 +1,22 @@
 use crate::app::App;
-use std::{fs, path};
+use std::fs;
 
-impl App {
-    pub fn does_token_exist(&self) -> bool {
-        let data_folder = dirs::data_dir()
-            .expect("failed to find data path...")
-            .join("al-goma/");
+impl App {}
 
-        if data_folder.try_exists().is_err() {
-            fs::create_dir_all(data_folder.clone()).expect("failed to make config dir...");
-            return false;
-        };
+pub fn does_token_exist() -> Result<bool, &'static str> {
+    let data_folder = dirs::data_dir()
+        .expect("failed to find data path...")
+        .join("al-goma/");
 
-        if data_folder.join("t.bin").exists() {
-            return true;
-        };
+    match data_folder.try_exists() {
+        Ok(true) => match data_folder.join("token.bin").try_exists() {
+            Ok(true) => return Ok(true),
+            Ok(false) => return Ok(false),
+            Err(_) => return Err("token.bin is corrupt!"),
+        },
+        Ok(false) => fs::create_dir_all(data_folder).expect("failed to make config dir..."),
+        Err(_) => return Err("failed to find data path..."),
+    };
 
-        false
-    }
+    Ok(false)
 }
