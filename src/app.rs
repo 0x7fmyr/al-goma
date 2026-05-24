@@ -4,11 +4,13 @@ use crate::ui::Cursor;
 use crate::{db, items::Ingredient};
 use crate::{list, locale};
 use crate::{ui, upload};
+use arboard::Clipboard;
 use chrono::Utc;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fs;
 use std::path::PathBuf;
+use tokio::sync::mpsc::{self, Sender};
 
 #[derive(Debug, PartialEq)]
 pub enum Space {
@@ -50,6 +52,10 @@ pub enum AppState {
     PromptPrint,
     UploadMenu,
     UploadFirstLogin,
+    UploadWaitingLoginUrl,
+    UploadShowLoginUrl,
+    UploadEnterCode,
+    UploadErr,
 }
 
 #[derive(Debug)]
@@ -73,7 +79,11 @@ pub struct App {
     pub pending_dish: Option<Dish>,
     pub category_db: HashMap<String, Category>,
     pub normalized_category_db: HashMap<String, Category>,
-    pub err_msg: Option<&'static str>,
+    pub err_msg: Option<String>,
+    pub url_receiver: Option<mpsc::Receiver<String>>,
+    pub code_sender: Option<mpsc::Sender<String>>,
+    pub login_result: Option<mpsc::Receiver<Result<(), String>>>,
+    pub login_url: Option<String>,
 }
 
 impl App {
@@ -137,6 +147,9 @@ impl App {
             pending_dish: None,
             left_window_actions,
             err_msg: None,
+            url_receiver: None,
+            code_sender: None,
+            login_url: None,
         }
     }
 
@@ -148,7 +161,8 @@ impl App {
             | AppState::EditingDishName
             | AppState::EditingAddIngredient
             | AppState::NewList
-            | AppState::AddToShoppingList => {
+            | AppState::AddToShoppingList
+            | AppState::UploadEnterCode => {
                 self.input.push(c);
             }
             _ => {}
@@ -163,7 +177,8 @@ impl App {
             | AppState::EditingAddIngredient
             | AppState::EditingDishName
             | AppState::NewList
-            | AppState::AddToShoppingList => {
+            | AppState::AddToShoppingList
+            | AppState::UploadEnterCode => {
                 self.input.pop();
             }
             _ => {}
@@ -288,6 +303,30 @@ impl App {
             }
             AppState::EditingAddIngredient => self.edit_add_ingredient(),
             AppState::PickingCategory => self.confim_category(),
+            AppState::UploadFirstLogin => {
+                let (url_sender, url_receiver) = mpsc::channel(100);
+                let (code_sender, code_receiver) = mpsc::channel(100);
+
+                std::thread::spawn(move || {
+                    tokio::runtime::Runtime::new()
+                        .unwrap()
+                        .block_on(upload::login(url_sender, code_receiver))
+                        .ok();
+                });
+                self.url_receiver = Some(url_receiver);
+                self.code_sender = Some(code_sender);
+                self.state = AppState::UploadWaitingLoginUrl;
+            }
+            AppState::UploadShowLoginUrl => self.state = AppState::UploadEnterCode,
+            AppState::UploadEnterCode => {
+                if let Some(sender) = &self.code_sender {
+                    tokio::runtime::Runtime::new()
+                        .unwrap()
+                        .block_on(sender.send(self.input.clone()))
+                        .ok();
+                }
+                self.input.clear();
+            }
             _ => {}
         }
     }
@@ -804,4 +843,18 @@ fn load_settings() -> Settings {
     let settings_load: Settings = toml::from_str(&settings).expect("settings.toml is fucked!");
 
     settings_load
+}
+
+pub fn copy_to_clipboard(input: String) -> Result<(), String> {
+    match Clipboard::new().unwrap().set_text(input) {
+        Ok(_) => return Ok(()),
+        Err(e) => return Err(e.to_string()),
+    };
+}
+
+pub fn paste_from_clipboard() -> Result<String, String> {
+    match Clipboard::new().unwrap().get_text() {
+        Ok(s) => return Ok(s),
+        Err(e) => return Err(e.to_string()),
+    }
 }

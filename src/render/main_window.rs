@@ -8,6 +8,8 @@ use ratatui::{Frame, layout::Rect};
 
 use super::db;
 use super::pop;
+use super::upload;
+
 use crate::app::{self, AppState, Space};
 use crate::locale::UiText;
 use crate::render::{self, new_list};
@@ -530,5 +532,26 @@ pub fn right(window: &mut Frame, rect: Rect, app: &mut app::App) {
             app,
             app.text_get(UiText::PPEnterIngredient),
         );
+    }
+
+    if matches!(app.state, AppState::UploadFirstLogin) {
+        let mut msg: Vec<Line> = Vec::from([Line::from("n/a")]);
+
+        if matches!(app.state, AppState::UploadFirstLogin) {
+            //fix this
+            msg = Vec::from([
+                Line::from(Span::styled(
+                    "You have not logged in to Google!",
+                    Style::new().add_modifier(Modifier::BOLD),
+                )),
+                Line::from(""),
+                Line::from(""),
+                Line::from("Press <Enter> to log in"),
+                Line::from("or"),
+                Line::from("<Esc> cancel"),
+            ]);
+        }
+
+        upload::login_popup(window, rect, app, msg);
     }
 }

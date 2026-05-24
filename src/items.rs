@@ -54,7 +54,7 @@ pub fn save_learned_categories(i: Ingredient) {
     fs::create_dir_all(data_folder.clone()).expect("failed to make dir: .data");
 
     fs::write(data_folder.join("added_item_categories.bin"), bytes)
-        .expect("failed to write .data/added_item_categories.bin");
+        .expect("failed to write .data/added_item_categories.bin") 
     
 }
 

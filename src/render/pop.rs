@@ -360,3 +360,5 @@ pub fn print_txt_options(window: &mut Frame, rect: Rect, app: &mut app::App) {
         options_text[1],
     );
 }
+
+

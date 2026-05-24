@@ -48,76 +48,92 @@ fn run(
 ) -> Result<(), Box<dyn Error>> {
     loop {
         terminal.draw(|window| {
-            if window.area().height <= 20 || window.area().width <= 75 {
-                let edge_h = Layout::default()
-                    .direction(Direction::Horizontal)
-                    .constraints([
-                        Constraint::Fill(1),
-                        Constraint::Length(39), // main window
-                        Constraint::Fill(1),
-                    ])
-                    .split(window.area());
-
-                let edge_v = Layout::default()
-                    .direction(Direction::Vertical)
-                    .constraints([
-                        Constraint::Fill(1),
-                        Constraint::Length(1),
-                        Constraint::Fill(1),
-                    ])
-                    .split(edge_h[1]);
-
-                window.render_widget(
-                    Paragraph::new("You're gonna need a bigger terminal..."),
-                    edge_v[1],
-                );
+            if matches!(app.state, AppState::UploadShowLoginUrl)
+                || matches!(app.state, AppState::UploadEnterCode)
+            {
+                render::upload::show_login_url(window, window.area(), app);
             } else {
-                let edge_w = Layout::default()
-                    .direction(Direction::Vertical)
-                    .constraints([
-                        Constraint::Length(1),
-                        Constraint::Fill(1),
-                        Constraint::Length(1),
-                    ])
-                    .split(window.area());
+                if window.area().height <= 20 || window.area().width <= 75 {
+                    let edge_h = Layout::default()
+                        .direction(Direction::Horizontal)
+                        .constraints([
+                            Constraint::Fill(1),
+                            Constraint::Length(39), // main window
+                            Constraint::Fill(1),
+                        ])
+                        .split(window.area());
 
-                let edge_w = Layout::default()
-                    .direction(Direction::Horizontal)
-                    .constraints([
-                        Constraint::Length(2),
-                        Constraint::Fill(1), // main window
-                        Constraint::Length(2),
-                    ])
-                    .split(edge_w[1]);
+                    let edge_v = Layout::default()
+                        .direction(Direction::Vertical)
+                        .constraints([
+                            Constraint::Fill(1),
+                            Constraint::Length(1),
+                            Constraint::Fill(1),
+                        ])
+                        .split(edge_h[1]);
 
-                let chunks = Layout::default()
-                    .direction(Direction::Horizontal)
-                    .constraints([
-                        Constraint::Length(30),
-                        Constraint::Length(2),
-                        Constraint::Fill(1),
-                    ])
-                    .split(edge_w[1].inner(Margin {
-                        horizontal: 3,
-                        vertical: 2,
-                    }));
+                    window.render_widget(
+                        Paragraph::new("You're gonna need a bigger terminal..."),
+                        edge_v[1],
+                    );
+                } else {
+                    let edge_w = Layout::default()
+                        .direction(Direction::Vertical)
+                        .constraints([
+                            Constraint::Length(1),
+                            Constraint::Fill(1),
+                            Constraint::Length(1),
+                        ])
+                        .split(window.area());
 
-                // MAIN WINDOW
-                window.render_widget(
-                    Paragraph::default().block(
-                        Block::bordered()
-                            .border_style(Style::default().fg(Color::Blue))
-                            .border_type(BorderType::Thick)
-                            .borders(Borders::ALL),
-                    ),
-                    edge_w[1],
-                );
+                    let edge_w = Layout::default()
+                        .direction(Direction::Horizontal)
+                        .constraints([
+                            Constraint::Length(2),
+                            Constraint::Fill(1), // main window
+                            Constraint::Length(2),
+                        ])
+                        .split(edge_w[1]);
 
-                render::main_window::left(window, chunks[0], app);
+                    let chunks = Layout::default()
+                        .direction(Direction::Horizontal)
+                        .constraints([
+                            Constraint::Length(30),
+                            Constraint::Length(2),
+                            Constraint::Fill(1),
+                        ])
+                        .split(edge_w[1].inner(Margin {
+                            horizontal: 3,
+                            vertical: 2,
+                        }));
 
-                render::main_window::right(window, chunks[2], app);
+                    // MAIN WINDOW
+                    window.render_widget(
+                        Paragraph::default().block(
+                            Block::bordered()
+                                .border_style(Style::default().fg(Color::Blue))
+                                .border_type(BorderType::Thick)
+                                .borders(Borders::ALL),
+                        ),
+                        edge_w[1],
+                    );
+
+                    render::main_window::left(window, chunks[0], app);
+
+                    render::main_window::right(window, chunks[2], app);
+                }
             }
         })?;
+
+        if matches!(app.state, AppState::UploadWaitingLoginUrl) {
+            if let Some(receiver) = &mut app.url_receiver {
+                if let Ok(url) = receiver.try_recv() {
+                    app.login_url = Some(url);
+                    app.state = AppState::UploadShowLoginUrl
+                }
+            }
+        }
+
         if event::poll(std::time::Duration::from_millis(16))?
             && let Event::Key(key) = event::read()?
         {
@@ -189,7 +205,8 @@ fn run(
                         | AppState::EditingDishName
                         | AppState::EditingAddIngredient
                         | AppState::NewList
-                        | AppState::AddToShoppingList => app.keyboard_input('q'),
+                        | AppState::AddToShoppingList
+                        | AppState::UploadEnterCode => app.keyboard_input('q'),
                         _ => break,
                     },
                     KeyCode::Esc => app.handle_esc(),
@@ -207,12 +224,23 @@ fn run(
                             )
                             .expect("failed to print file..");
                             app.state = AppState::ShowShoppingList
+                        } else if matches!(app.state, AppState::UploadShowLoginUrl) {
+                            app.state = AppState::UploadEnterCode;
+                            match app::paste_from_clipboard() {
+                                Ok(paste) => app.input = paste,
+                                Err(e) => app.err_msg = Some(e),
+                            }
                         } else {
                             app.keyboard_input('p')
                         }
                     }
+                    KeyCode::Char('c') => {
+                        if matches!(app.state, AppState::UploadShowLoginUrl) {
+                            app::copy_to_clipboard(app.login_url.clone().unwrap()).ok();
+                        }
+                    }
 
-                    KeyCode::Char(c) => app.keyboard_input(c),
+                    KeyCode::Char(ch) => app.keyboard_input(ch),
 
                     KeyCode::Backspace => app.backspace(),
                     KeyCode::Delete => app.handle_delete(),
@@ -222,6 +250,8 @@ fn run(
                     _ => {}
                 },
             }
+
+            //
         }
     }
     Ok(())
