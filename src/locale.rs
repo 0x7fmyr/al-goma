@@ -61,6 +61,17 @@ pub enum UiText {
     TTShowGenList,
     TTShowShoppingList,
     TTPromtPrint,
+
+    //UPLOAD
+    UPFirstLogin1,
+    UPFirstLogin2,
+    UPFirstLogin3,
+    UPFirstLogin4,
+    UPGo2ThisUrl,
+    UPGo2ThisUrlToolTip,
+    UPWaiting4Url,
+    UPWaiting4Google,
+    UPEnterCode,
 }
 
 pub fn swedish() -> HashMap<UiText, &'static str> {
@@ -141,6 +152,22 @@ pub fn swedish() -> HashMap<UiText, &'static str> {
             UiText::TTPromtPrint,
             "[up/down] välj   [enter] bekräfta   [p] exportera   [esc] avbryt",
         ),
+        //UPLOAD
+        (UiText::UPFirstLogin1, "Du har inte loggat in på Google än!"),
+        (UiText::UPFirstLogin2, "Tryck på <Enter> för att logga in"),
+        (UiText::UPFirstLogin3, "eller"),
+        (UiText::UPFirstLogin4, "<Esc> för att avbryta"),
+        (
+            UiText::UPGo2ThisUrl,
+            "Gå till den här Url för att logga in:",
+        ),
+        (
+            UiText::UPGo2ThisUrlToolTip,
+            "C för att kopiera länken, Enter för att ange kod eller P för klistra in kod",
+        ),
+        (UiText::UPWaiting4Url, "Väntar på Url..."),
+        (UiText::UPWaiting4Google, "Väntar på Google..."),
+        (UiText::UPEnterCode, "Ange kod:"),
     ])
 }
 
@@ -219,5 +246,18 @@ pub fn english() -> HashMap<UiText, &'static str> {
             UiText::TTPromtPrint,
             "[up/down] select   [enter] confirm   [p] print   [esc] cancel",
         ),
+        //UPLOAD
+        (UiText::UPFirstLogin1, "You have not logged in to Google!"),
+        (UiText::UPFirstLogin2, "Press <Enter> to log in"),
+        (UiText::UPFirstLogin3, "or"),
+        (UiText::UPFirstLogin4, "<Esc> cancel"),
+        (UiText::UPGo2ThisUrl, "Go to this Url to Login:"),
+        (
+            UiText::UPGo2ThisUrlToolTip,
+            "C to copy link to clipboard, Enter to input code or P to paste Code form clipboard",
+        ),
+        (UiText::UPWaiting4Url, "Waiting for Url..."),
+        (UiText::UPWaiting4Google, "Waiting on Google..."),
+        (UiText::UPEnterCode, "Enter Code:"),
     ])
 }

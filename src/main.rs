@@ -134,6 +134,19 @@ fn run(
             }
         }
 
+        if matches!(app.state, AppState::UploadLogginginWait) {
+            if let Some(receiver) = &mut app.login_result_receiver {
+                match receiver.try_recv() {
+                    Ok(Ok(())) => app.state = AppState::UploadMenu,
+                    Ok(Err(e)) => {
+                        app.err_msg = Some(e.to_string());
+                        app.state = AppState::UploadErr;
+                    }
+                    Err(_) => {}
+                }
+            }
+        }
+
         if event::poll(std::time::Duration::from_millis(16))?
             && let Event::Key(key) = event::read()?
         {
@@ -237,6 +250,8 @@ fn run(
                     KeyCode::Char('c') => {
                         if matches!(app.state, AppState::UploadShowLoginUrl) {
                             app::copy_to_clipboard(app.login_url.clone().unwrap()).ok();
+                        } else {
+                            app.keyboard_input('c');
                         }
                     }
 

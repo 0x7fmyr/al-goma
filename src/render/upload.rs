@@ -5,13 +5,12 @@ use ratatui::text::{Line, Span};
 
 use ratatui::widgets::{Block, BorderType::Rounded, Borders, Clear, Paragraph, Wrap};
 use ratatui::{Frame, layout::Rect};
-use tokio::io::split;
 
 use crate::app::{self, AppState};
 use crate::locale::UiText;
 use crate::render::pop;
 
-pub fn login_popup(window: &mut Frame, rect: Rect, app: &mut app::App, msg: Vec<Line>) {
+pub fn login_popup(window: &mut Frame, rect: Rect, msg: Vec<Line>) {
     let main_h = Layout::default()
         .direction(Direction::Horizontal)
         .constraints([
@@ -53,10 +52,8 @@ pub fn login_popup(window: &mut Frame, rect: Rect, app: &mut app::App, msg: Vec<
 
 pub fn show_login_url(window: &mut Frame, rect: Rect, app: &mut app::App) {
     let msg = vec![
-        Line::from("Go to this url to Login:"),
-        Line::from(
-            "C to copy link to clipboard, Enter to input code or P to paste Code form clipboard",
-        ),
+        Line::from(app.text_get(UiText::UPGo2ThisUrl)),
+        Line::from(app.text_get(UiText::UPGo2ThisUrlToolTip)),
     ];
     let url = app.login_url.clone().unwrap();
 
@@ -89,6 +86,6 @@ pub fn show_login_url(window: &mut Frame, rect: Rect, app: &mut app::App) {
     );
 
     if matches!(app.state, AppState::UploadEnterCode) {
-        pop::input_box(window, text[2], app, "Enter Code:".to_string());
+        pop::input_box(window, text[2], app, app.text_get(UiText::UPEnterCode));
     }
 }

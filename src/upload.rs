@@ -1,17 +1,38 @@
 use async_trait::async_trait;
+use serde::Deserialize;
+use serde::Serialize;
 use tokio::sync::Mutex;
 use tokio::sync::mpsc;
 use tokio::sync::mpsc::{Receiver, Sender};
 
+use yup_oauth2::AccessToken;
+use yup_oauth2::hyper::client;
 use yup_oauth2::{
     ApplicationSecret, InstalledFlowAuthenticator, authenticator_delegate::InstalledFlowDelegate,
 };
 
 use std::{fs, pin::Pin};
 
+use crate::items::Ingredient;
+
 pub struct AlgomaFlowDelegate {
     url_sender: Sender<String>,
     code_receiver: tokio::sync::Mutex<Receiver<String>>,
+}
+
+#[derive(Serialize)]
+pub struct GoogleTasksListName {
+    title: String,
+}
+
+#[derive(Deserialize)]
+pub struct GoogleTaskListResponse {
+    id: String,
+}
+
+#[derive(Serialize)]
+pub struct GoogleTasksListItem {
+    title: String,
 }
 
 pub fn does_token_exist() -> Result<bool, String> {
@@ -100,4 +121,83 @@ pub async fn login(
         Ok(_) => return Ok(()),
         Err(e) => return Err(format!("{}", e)),
     };
+}
+
+pub async fn upload(shopping_list: Vec<Ingredient>) -> Result<(), String> {
+    let secret_path = dirs::data_dir()
+        .expect("failed to find data path...")
+        .join("al-goma/clientsecret.json");
+
+    let token_path = dirs::data_dir()
+        .expect("failed to find data path...")
+        .join("al-goma/tokencache.json");
+
+    let secret = match yup_oauth2::read_application_secret(secret_path).await {
+        Ok(s) => s,
+        Err(e) => return Err(format!("{}", e)),
+    };
+
+    let login = match InstalledFlowAuthenticator::builder(
+        secret,
+        yup_oauth2::InstalledFlowReturnMethod::HTTPRedirect,
+    )
+    .persist_tokens_to_disk(token_path)
+    .build()
+    .await
+    {
+        Ok(s) => s,
+        Err(e) => return Err(format!("{}", e)),
+    };
+
+    let scopes = &["https://www.googleapis.com/auth/tasks"];
+    let token_string = match login.token(scopes).await {
+        Ok(s) => s.token().unwrap().to_string(),
+        Err(e) => return Err(format!("{}", e)),
+    };
+
+    let list_title = GoogleTasksListName {
+        title: "2016-01-01".to_string(),
+    };
+
+    let client = reqwest::Client::new();
+
+    let response = match client
+        .post("https://tasks.googleapis.com/tasks/v1/users/@me/lists")
+        .bearer_auth(&token_string)
+        .json(&list_title)
+        .send()
+        .await
+    {
+        Ok(s) => s,
+        Err(e) => return Err(e.to_string()),
+    };
+
+    let list_response = match response.json::<GoogleTaskListResponse>().await {
+        Ok(s) => s,
+        Err(e) => return Err(e.to_string()),
+    };
+
+    let list_url = format!(
+        "https://tasks.googleapis.com/tasks/v1/lists/{}/tasks",
+        list_response.id
+    );
+
+    for ingredient in shopping_list {
+        let item = GoogleTasksListItem {
+            title: ingredient.name,
+        };
+
+        match client
+            .post(&list_url)
+            .bearer_auth(&token_string)
+            .json(&item)
+            .send()
+            .await
+        {
+            Ok(_) => continue,
+            Err(e) => return Err(e.to_string()),
+        };
+    }
+
+    return Ok(());
 }

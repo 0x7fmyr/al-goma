@@ -534,24 +534,38 @@ pub fn right(window: &mut Frame, rect: Rect, app: &mut app::App) {
         );
     }
 
-    if matches!(app.state, AppState::UploadFirstLogin) {
+    if matches!(app.state, AppState::UploadFirstLogin)
+        || matches!(app.state, AppState::UploadWaitingLoginUrl)
+        || matches!(app.state, AppState::UploadMenu)
+    {
         let mut msg: Vec<Line> = Vec::from([Line::from("n/a")]);
 
         if matches!(app.state, AppState::UploadFirstLogin) {
             //fix this
             msg = Vec::from([
                 Line::from(Span::styled(
-                    "You have not logged in to Google!",
+                    app.text_get(UiText::UPFirstLogin1),
                     Style::new().add_modifier(Modifier::BOLD),
                 )),
                 Line::from(""),
                 Line::from(""),
-                Line::from("Press <Enter> to log in"),
-                Line::from("or"),
-                Line::from("<Esc> cancel"),
+                Line::from(app.text_get(UiText::UPFirstLogin2)),
+                Line::from(app.text_get(UiText::UPFirstLogin3)),
+                Line::from(app.text_get(UiText::UPFirstLogin4)),
             ]);
         }
-
-        upload::login_popup(window, rect, app, msg);
+        if matches!(app.state, AppState::UploadWaitingLoginUrl) {
+            msg = Vec::from([Line::from(Span::styled(
+                app.text_get(UiText::UPWaiting4Url),
+                Style::new().add_modifier(Modifier::BOLD),
+            ))]);
+        }
+        if matches!(app.state, AppState::UploadLogginginWait) {
+            msg = Vec::from([Line::from(Span::styled(
+                app.text_get(UiText::UPWaiting4Google),
+                Style::new().add_modifier(Modifier::BOLD),
+            ))]);
+        }
+        upload::login_popup(window, rect, msg);
     }
 }

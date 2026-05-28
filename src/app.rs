@@ -1,6 +1,7 @@
 use crate::items::{self, Category, Database, Dish};
 use crate::locale::UiText;
 use crate::ui::Cursor;
+use crate::upload::upload;
 use crate::{db, items::Ingredient};
 use crate::{list, locale};
 use crate::{ui, upload};
@@ -55,6 +56,7 @@ pub enum AppState {
     UploadWaitingLoginUrl,
     UploadShowLoginUrl,
     UploadEnterCode,
+    UploadLogginginWait,
     UploadErr,
 }
 
@@ -82,7 +84,7 @@ pub struct App {
     pub err_msg: Option<String>,
     pub url_receiver: Option<mpsc::Receiver<String>>,
     pub code_sender: Option<mpsc::Sender<String>>,
-    pub login_result: Option<mpsc::Receiver<Result<(), String>>>,
+    pub login_result_receiver: Option<mpsc::Receiver<Result<(), String>>>,
     pub login_url: Option<String>,
 }
 
@@ -149,6 +151,7 @@ impl App {
             err_msg: None,
             url_receiver: None,
             code_sender: None,
+            login_result_receiver: None,
             login_url: None,
         }
     }
@@ -306,15 +309,23 @@ impl App {
             AppState::UploadFirstLogin => {
                 let (url_sender, url_receiver) = mpsc::channel(100);
                 let (code_sender, code_receiver) = mpsc::channel(100);
+                let (login_result_sender, login_result_receiver) = mpsc::channel(100);
 
                 std::thread::spawn(move || {
+                    let result = tokio::runtime::Runtime::new()
+                        .unwrap()
+                        .block_on(upload::login(url_sender, code_receiver));
+
                     tokio::runtime::Runtime::new()
                         .unwrap()
-                        .block_on(upload::login(url_sender, code_receiver))
+                        .block_on(login_result_sender.send(result))
                         .ok();
                 });
+
                 self.url_receiver = Some(url_receiver);
                 self.code_sender = Some(code_sender);
+                self.login_result_receiver = Some(login_result_receiver);
+
                 self.state = AppState::UploadWaitingLoginUrl;
             }
             AppState::UploadShowLoginUrl => self.state = AppState::UploadEnterCode,
@@ -326,6 +337,14 @@ impl App {
                         .ok();
                 }
                 self.input.clear();
+                self.state = AppState::UploadLogginginWait
+            }
+            AppState::UploadMenu => {
+                tokio::runtime::Runtime::new()
+                    .unwrap()
+                    .block_on(upload::upload(self.shopping_list.clone()))
+                    .ok();
+                println!("lets goooo!")
             }
             _ => {}
         }

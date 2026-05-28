@@ -15,6 +15,6 @@ postcard = { version = "1", features = ["use-std"] }
 dirs = "5.0"
 tokio = { version = "1.52.1", features = ["full"]}
 yup-oauth2 = "12.1.2"
-reqwest = "0.13.3"
+reqwest = { version = "0.13.3", features = ["json"] }
 async-trait = "0.1.89"
 arboard = { version = "3.6.1", features = ["wayland-data-control"] }
