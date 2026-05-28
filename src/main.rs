@@ -51,7 +51,7 @@ fn run(
             if matches!(app.state, AppState::UploadShowLoginUrl)
                 || matches!(app.state, AppState::UploadEnterCode)
             {
-                render::upload::show_login_url(window, window.area(), app);
+                render::render_upload::show_login_url(window, window.area(), app);
             } else {
                 if window.area().height <= 20 || window.area().width <= 75 {
                     let edge_h = Layout::default()

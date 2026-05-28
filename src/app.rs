@@ -340,11 +340,10 @@ impl App {
                 self.state = AppState::UploadLogginginWait
             }
             AppState::UploadMenu => {
-                tokio::runtime::Runtime::new()
-                    .unwrap()
-                    .block_on(upload::upload(self.shopping_list.clone()))
-                    .ok();
-                println!("lets goooo!")
+                //     tokio::runtime::Runtime::new()
+                //         .unwrap()
+                //         .block_on(upload::upload(self.shopping_list.clone()))
+                //         .ok();
             }
             _ => {}
         }

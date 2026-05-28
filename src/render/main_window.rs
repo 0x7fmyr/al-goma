@@ -8,7 +8,7 @@ use ratatui::{Frame, layout::Rect};
 
 use super::db;
 use super::pop;
-use super::upload;
+use super::render_upload;
 
 use crate::app::{self, AppState, Space};
 use crate::locale::UiText;
@@ -566,6 +566,6 @@ pub fn right(window: &mut Frame, rect: Rect, app: &mut app::App) {
                 Style::new().add_modifier(Modifier::BOLD),
             ))]);
         }
-        upload::login_popup(window, rect, msg);
+        render_upload::login_popup(window, rect, msg);
     }
 }

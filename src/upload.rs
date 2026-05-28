@@ -182,9 +182,9 @@ pub async fn upload(shopping_list: Vec<Ingredient>) -> Result<(), String> {
         list_response.id
     );
 
-    for ingredient in shopping_list {
+    for ingredient in shopping_list.iter().rev() {
         let item = GoogleTasksListItem {
-            title: ingredient.name,
+            title: ingredient.name.clone(),
         };
 
         match client
