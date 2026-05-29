@@ -10,7 +10,7 @@ use super::db;
 use super::pop;
 use super::render_upload;
 
-use crate::app::{self, AppState, Space};
+use crate::app::{self, App, AppState, Space};
 use crate::locale::UiText;
 use crate::render::{self, new_list};
 
@@ -536,7 +536,6 @@ pub fn right(window: &mut Frame, rect: Rect, app: &mut app::App) {
 
     if matches!(app.state, AppState::UploadFirstLogin)
         || matches!(app.state, AppState::UploadWaitingLoginUrl)
-        || matches!(app.state, AppState::UploadMenu)
     {
         let mut msg: Vec<Line> = Vec::from([Line::from("n/a")]);
 
@@ -567,5 +566,11 @@ pub fn right(window: &mut Frame, rect: Rect, app: &mut app::App) {
             ))]);
         }
         render_upload::login_popup(window, rect, msg);
+    }
+    if matches!(app.state, AppState::UploadMenu)
+        || matches!(app.state, AppState::Uploading)
+        || matches!(app.state, AppState::UploadDone)
+    {
+        render_upload::upload_menu(window, rect, app);
     }
 }

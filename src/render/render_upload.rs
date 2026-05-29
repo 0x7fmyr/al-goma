@@ -1,9 +1,11 @@
 use ratatui::layout::{Alignment, Constraint, Layout, Margin};
 use ratatui::prelude::Direction;
 use ratatui::style::{Color, Modifier, Style, Stylize};
+use ratatui::symbols;
+use ratatui::symbols::line::THICK_HORIZONTAL;
 use ratatui::text::{Line, Span};
 
-use ratatui::widgets::{Block, BorderType::Rounded, Borders, Clear, Paragraph, Wrap};
+use ratatui::widgets::{Block, BorderType::Rounded, Borders, Clear, LineGauge, Paragraph, Wrap};
 use ratatui::{Frame, layout::Rect};
 
 use crate::app::{self, AppState};
@@ -87,5 +89,45 @@ pub fn show_login_url(window: &mut Frame, rect: Rect, app: &mut app::App) {
 
     if matches!(app.state, AppState::UploadEnterCode) {
         pop::input_box(window, text[2], app, app.text_get(UiText::UPEnterCode));
+    }
+}
+
+pub fn upload_menu(window: &mut Frame, rect: Rect, app: &mut app::App) {
+    let content = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints([
+            Constraint::Length(2),
+            Constraint::Fill(1),
+            Constraint::Length(3),
+            Constraint::Fill(1),
+            Constraint::Length(1),
+        ])
+        .split(rect.inner(Margin {
+            horizontal: 2,
+            vertical: 2,
+        }));
+
+    window.render_widget(
+        Paragraph::new("Press Enter to upload Shopping List to Google Tasks")
+            .wrap(Wrap { trim: false })
+            .alignment(Alignment::Center),
+        content[0],
+    );
+
+    if matches!(app.state, AppState::UploadDone) {
+        window.render_widget(
+            Paragraph::new("Done!")
+                .alignment(Alignment::Center)
+                .add_modifier(Modifier::BOLD),
+            content[2],
+        );
+    } else if matches!(app.state, AppState::Uploading) {
+        let gauge = LineGauge::default()
+            .filled_style(Style::new().blue().on_black().bold())
+            .ratio(app.progress.procent);
+
+        window.render_widget(gauge, content[2]);
+    } else {
+        pop::input_box(window, content[2], app, "Title:".to_string());
     }
 }

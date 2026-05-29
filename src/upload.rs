@@ -34,6 +34,11 @@ pub struct GoogleTaskListResponse {
 pub struct GoogleTasksListItem {
     title: String,
 }
+#[derive(Debug, Clone, Copy)]
+pub struct UploadProgress {
+    pub procent: f64,
+    pub done: bool,
+}
 
 pub fn does_token_exist() -> Result<bool, String> {
     let data_folder = dirs::data_dir()
@@ -80,8 +85,6 @@ impl InstalledFlowDelegate for AlgomaFlowDelegate {
     }
 }
 
-//https://docs.rs/yup-oauth2/12.1.2/yup_oauth2/
-
 pub async fn login(
     url_sender: mpsc::Sender<String>,
     code_receiver: mpsc::Receiver<String>,
@@ -123,7 +126,11 @@ pub async fn login(
     };
 }
 
-pub async fn upload(shopping_list: Vec<Ingredient>) -> Result<(), String> {
+pub async fn upload(
+    shopping_list: Vec<Ingredient>,
+    input: String,
+    progress_sender: Sender<UploadProgress>,
+) -> Result<(), String> {
     let secret_path = dirs::data_dir()
         .expect("failed to find data path...")
         .join("al-goma/clientsecret.json");
@@ -155,9 +162,7 @@ pub async fn upload(shopping_list: Vec<Ingredient>) -> Result<(), String> {
         Err(e) => return Err(format!("{}", e)),
     };
 
-    let list_title = GoogleTasksListName {
-        title: "2016-01-01".to_string(),
-    };
+    let list_title = GoogleTasksListName { title: input };
 
     let client = reqwest::Client::new();
 
@@ -182,7 +187,12 @@ pub async fn upload(shopping_list: Vec<Ingredient>) -> Result<(), String> {
         list_response.id
     );
 
-    for ingredient in shopping_list.iter().rev() {
+    let mut progress = UploadProgress {
+        procent: 0.0,
+        done: false,
+    };
+
+    for (i, ingredient) in shopping_list.iter().rev().enumerate() {
         let item = GoogleTasksListItem {
             title: ingredient.name.clone(),
         };
@@ -194,10 +204,23 @@ pub async fn upload(shopping_list: Vec<Ingredient>) -> Result<(), String> {
             .send()
             .await
         {
-            Ok(_) => continue,
+            Ok(_) => {
+                progress.procent = i as f64 / shopping_list.len() as f64;
+
+                progress_sender.send(progress.clone()).await.ok();
+
+                continue;
+            }
             Err(e) => return Err(e.to_string()),
         };
     }
+    progress_sender
+        .send(UploadProgress {
+            procent: 1.0,
+            done: true,
+        })
+        .await
+        .ok();
 
     return Ok(());
 }

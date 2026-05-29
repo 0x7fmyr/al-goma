@@ -16,6 +16,7 @@ use std::error::Error;
 use std::io::stdout;
 
 use crate::app::AppState;
+use crate::upload::UploadProgress;
 
 mod app;
 mod db;
@@ -130,6 +131,23 @@ fn run(
                 if let Ok(url) = receiver.try_recv() {
                     app.login_url = Some(url);
                     app.state = AppState::UploadShowLoginUrl
+                }
+            }
+        }
+
+        if matches!(app.state, AppState::Uploading) {
+            if let Some(receiver) = &mut app.progress_checker_receiver {
+                match receiver.try_recv() {
+                    Ok(i) => app.progress = i,
+                    Err(_) => {}
+                }
+            }
+
+            if app.progress.done {
+                app.state = AppState::UploadDone;
+                app.progress = UploadProgress {
+                    procent: 0.0,
+                    done: false,
                 }
             }
         }

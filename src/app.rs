@@ -1,7 +1,7 @@
 use crate::items::{self, Category, Database, Dish};
 use crate::locale::UiText;
 use crate::ui::Cursor;
-use crate::upload::upload;
+use crate::upload::{UploadProgress, upload};
 use crate::{db, items::Ingredient};
 use crate::{list, locale};
 use crate::{ui, upload};
@@ -58,21 +58,27 @@ pub enum AppState {
     UploadEnterCode,
     UploadLogginginWait,
     UploadErr,
+    Uploading,
+    UploadDone,
 }
 
 #[derive(Debug)]
 pub struct App {
     pub current_dish_list: Option<Vec<Dish>>,
     pub shopping_list: Vec<Ingredient>,
+
     pub text_options: (bool, bool),
     pub text: HashMap<UiText, &'static str>,
+
     pub cursor: usize,
     pub db_cursor: Cursor,
     pub edit_cursor: Cursor,
     pub ays_cursor: usize,
     pub picking_cursor: usize,
+
     pub moving_focus: bool,
     pub selected_space: Space,
+
     pub left_window_actions: Vec<&'static str>,
     pub db: Database,
     pub state: AppState,
@@ -82,10 +88,15 @@ pub struct App {
     pub category_db: HashMap<String, Category>,
     pub normalized_category_db: HashMap<String, Category>,
     pub err_msg: Option<String>,
+
     pub url_receiver: Option<mpsc::Receiver<String>>,
     pub code_sender: Option<mpsc::Sender<String>>,
     pub login_result_receiver: Option<mpsc::Receiver<Result<(), String>>>,
+    pub progress_checker_receiver: Option<mpsc::Receiver<upload::UploadProgress>>,
+    pub progress_checker_sender: Option<mpsc::Sender<upload::UploadProgress>>,
+
     pub login_url: Option<String>,
+    pub progress: upload::UploadProgress,
 }
 
 impl App {
@@ -152,7 +163,13 @@ impl App {
             url_receiver: None,
             code_sender: None,
             login_result_receiver: None,
+            progress_checker_receiver: None,
+            progress_checker_sender: None,
             login_url: None,
+            progress: UploadProgress {
+                procent: 0.0,
+                done: false,
+            },
         }
     }
 
@@ -165,7 +182,8 @@ impl App {
             | AppState::EditingAddIngredient
             | AppState::NewList
             | AppState::AddToShoppingList
-            | AppState::UploadEnterCode => {
+            | AppState::UploadEnterCode
+            | AppState::UploadMenu => {
                 self.input.push(c);
             }
             _ => {}
@@ -181,7 +199,8 @@ impl App {
             | AppState::EditingDishName
             | AppState::NewList
             | AppState::AddToShoppingList
-            | AppState::UploadEnterCode => {
+            | AppState::UploadEnterCode
+            | AppState::UploadMenu => {
                 self.input.pop();
             }
             _ => {}
@@ -226,13 +245,18 @@ impl App {
                     self.selected_space = Space::MainRight;
                 } else if self.selected_space == Space::MainLeft && self.cursor == 4 {
                     match upload::does_token_exist() {
-                        Ok(true) => self.state = AppState::UploadMenu,
+                        Ok(true) => {
+                            self.state = AppState::UploadMenu;
+                            self.input =
+                                format!("Shopping List {}", Utc::now().date_naive().to_string());
+                        }
                         Ok(false) => self.state = AppState::UploadFirstLogin,
                         Err(s) => {
                             self.state = AppState::Error;
                             self.err_msg = Some(s)
                         }
                     }
+                    self.selected_space = Space::MainRight
                 }
 
                 self.moving_focus = false
@@ -260,10 +284,9 @@ impl App {
             }
             AppState::ShowGeneratedList => {
                 self.state = AppState::ShowShoppingList;
+
                 list::make_shopping_list(self.current_dish_list.clone(), &mut self.shopping_list);
-
                 list::save_list(self.current_dish_list.clone());
-
                 list::save_shopping_list_config(self.shopping_list.clone());
 
                 self.cursor = 1;
@@ -340,10 +363,19 @@ impl App {
                 self.state = AppState::UploadLogginginWait
             }
             AppState::UploadMenu => {
-                //     tokio::runtime::Runtime::new()
-                //         .unwrap()
-                //         .block_on(upload::upload(self.shopping_list.clone()))
-                //         .ok();
+                self.state = AppState::Uploading;
+                let shopping_list = self.shopping_list.clone();
+                let input = self.input.clone();
+                let (progress_sender, progress_receiver) = mpsc::channel(100);
+
+                std::thread::spawn(move || {
+                    tokio::runtime::Runtime::new()
+                        .unwrap()
+                        .block_on(upload::upload(shopping_list, input, progress_sender))
+                        .ok();
+                });
+
+                self.progress_checker_receiver = Some(progress_receiver);
             }
             _ => {}
         }
