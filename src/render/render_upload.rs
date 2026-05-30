@@ -1,9 +1,7 @@
 use ratatui::layout::{Alignment, Constraint, Layout, Margin};
 use ratatui::prelude::Direction;
 use ratatui::style::{Color, Modifier, Style, Stylize};
-use ratatui::symbols;
-use ratatui::symbols::line::THICK_HORIZONTAL;
-use ratatui::text::{Line, Span};
+use ratatui::text::Line;
 
 use ratatui::widgets::{Block, BorderType::Rounded, Borders, Clear, LineGauge, Paragraph, Wrap};
 use ratatui::{Frame, layout::Rect};
@@ -108,7 +106,7 @@ pub fn upload_menu(window: &mut Frame, rect: Rect, app: &mut app::App) {
         }));
 
     window.render_widget(
-        Paragraph::new("Press Enter to upload Shopping List to Google Tasks")
+        Paragraph::new(app.text_get(UiText::UPEnter2Upload))
             .wrap(Wrap { trim: false })
             .alignment(Alignment::Center),
         content[0],
@@ -116,7 +114,7 @@ pub fn upload_menu(window: &mut Frame, rect: Rect, app: &mut app::App) {
 
     if matches!(app.state, AppState::UploadDone) {
         window.render_widget(
-            Paragraph::new("Done!")
+            Paragraph::new(app.text_get(UiText::UPDone))
                 .alignment(Alignment::Center)
                 .add_modifier(Modifier::BOLD),
             content[2],
@@ -128,6 +126,6 @@ pub fn upload_menu(window: &mut Frame, rect: Rect, app: &mut app::App) {
 
         window.render_widget(gauge, content[2]);
     } else {
-        pop::input_box(window, content[2], app, "Title:".to_string());
+        pop::input_box(window, content[2], app, app.text_get(UiText::UPTitle));
     }
 }

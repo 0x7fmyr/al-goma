@@ -72,6 +72,9 @@ pub enum UiText {
     UPWaiting4Url,
     UPWaiting4Google,
     UPEnterCode,
+    UPEnter2Upload,
+    UPDone,
+    UPTitle,
 }
 
 pub fn swedish() -> HashMap<UiText, &'static str> {
@@ -168,6 +171,12 @@ pub fn swedish() -> HashMap<UiText, &'static str> {
         (UiText::UPWaiting4Url, "Väntar på Url..."),
         (UiText::UPWaiting4Google, "Väntar på Google..."),
         (UiText::UPEnterCode, "Ange kod:"),
+        (
+            UiText::UPEnter2Upload,
+            "Tryck Enter för att ladda upp Lista till Google Tasks",
+        ),
+        (UiText::UPDone, "Klart!"),
+        (UiText::UPTitle, "Titel:"),
     ])
 }
 
@@ -259,5 +268,11 @@ pub fn english() -> HashMap<UiText, &'static str> {
         (UiText::UPWaiting4Url, "Waiting for Url..."),
         (UiText::UPWaiting4Google, "Waiting on Google..."),
         (UiText::UPEnterCode, "Enter Code:"),
+        (
+            UiText::UPEnter2Upload,
+            "Press Enter to upload Shopping list to Google Tasks",
+        ),
+        (UiText::UPDone, "Done!"),
+        (UiText::UPTitle, "Title:"),
     ])
 }

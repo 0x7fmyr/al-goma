@@ -1,19 +1,15 @@
-use async_trait::async_trait;
 use serde::Deserialize;
 use serde::Serialize;
-use tokio::sync::Mutex;
 use tokio::sync::mpsc;
 use tokio::sync::mpsc::{Receiver, Sender};
 
-use yup_oauth2::AccessToken;
-use yup_oauth2::hyper::client;
-use yup_oauth2::{
-    ApplicationSecret, InstalledFlowAuthenticator, authenticator_delegate::InstalledFlowDelegate,
-};
+use yup_oauth2::{InstalledFlowAuthenticator, authenticator_delegate::InstalledFlowDelegate};
 
 use std::{fs, pin::Pin};
 
 use crate::items::Ingredient;
+
+use crate::app::{App, AppState};
 
 pub struct AlgomaFlowDelegate {
     url_sender: Sender<String>,
@@ -38,6 +34,58 @@ pub struct GoogleTasksListItem {
 pub struct UploadProgress {
     pub procent: f64,
     pub done: bool,
+}
+
+impl App {
+    pub fn upload_first_login(&mut self) {
+        let (url_sender, url_receiver) = mpsc::channel(100);
+        let (code_sender, code_receiver) = mpsc::channel(100);
+        let (login_result_sender, login_result_receiver) = mpsc::channel(100);
+
+        std::thread::spawn(move || {
+            let result = tokio::runtime::Runtime::new()
+                .unwrap()
+                .block_on(login(url_sender, code_receiver));
+
+            tokio::runtime::Runtime::new()
+                .unwrap()
+                .block_on(login_result_sender.send(result))
+                .ok();
+        });
+
+        self.url_receiver = Some(url_receiver);
+        self.code_sender = Some(code_sender);
+        self.login_result_receiver = Some(login_result_receiver);
+
+        self.state = AppState::UploadWaitingLoginUrl;
+    }
+
+    pub fn send_code(&mut self) {
+        if let Some(sender) = &self.code_sender {
+            tokio::runtime::Runtime::new()
+                .unwrap()
+                .block_on(sender.send(self.input.clone()))
+                .ok();
+        }
+        self.input.clear();
+        self.state = AppState::UploadLogginginWait
+    }
+
+    pub fn init_upload_list(&mut self) {
+        self.state = AppState::Uploading;
+        let shopping_list = self.shopping_list.clone();
+        let input = self.input.clone();
+        let (progress_sender, progress_receiver) = mpsc::channel(100);
+
+        std::thread::spawn(move || {
+            tokio::runtime::Runtime::new()
+                .unwrap()
+                .block_on(upload(shopping_list, input, progress_sender))
+                .ok();
+        });
+
+        self.progress_checker_receiver = Some(progress_receiver);
+    }
 }
 
 pub fn does_token_exist() -> Result<bool, String> {

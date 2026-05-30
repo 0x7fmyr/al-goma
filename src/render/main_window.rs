@@ -10,7 +10,7 @@ use super::db;
 use super::pop;
 use super::render_upload;
 
-use crate::app::{self, App, AppState, Space};
+use crate::app::{self, AppState, Space};
 use crate::locale::UiText;
 use crate::render::{self, new_list};
 

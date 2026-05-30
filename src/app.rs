@@ -1,7 +1,7 @@
 use crate::items::{self, Category, Database, Dish};
 use crate::locale::UiText;
 use crate::ui::Cursor;
-use crate::upload::{UploadProgress, upload};
+use crate::upload::UploadProgress;
 use crate::{db, items::Ingredient};
 use crate::{list, locale};
 use crate::{ui, upload};
@@ -11,7 +11,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fs;
 use std::path::PathBuf;
-use tokio::sync::mpsc::{self, Sender};
+use tokio::sync::mpsc;
 
 #[derive(Debug, PartialEq)]
 pub enum Space {
@@ -35,15 +35,18 @@ pub enum AppState {
     Error,
     Normal,
     MovingFocus,
+
     EnteringDishName,
     EnteringIngredients,
     PickingCategory,
+
     ViewingDatabase,
     EditingDish,
     EditingIngredient,
     EditingAddIngredient,
     EditingDishName,
     AreYouSureDelDish,
+
     NewList,
     ReplaceList,
     ShowGeneratedList,
@@ -51,6 +54,7 @@ pub enum AppState {
     ShowShoppingList,
     AddToShoppingList,
     PromptPrint,
+
     UploadMenu,
     UploadFirstLogin,
     UploadWaitingLoginUrl,
@@ -93,7 +97,6 @@ pub struct App {
     pub code_sender: Option<mpsc::Sender<String>>,
     pub login_result_receiver: Option<mpsc::Receiver<Result<(), String>>>,
     pub progress_checker_receiver: Option<mpsc::Receiver<upload::UploadProgress>>,
-    pub progress_checker_sender: Option<mpsc::Sender<upload::UploadProgress>>,
 
     pub login_url: Option<String>,
     pub progress: upload::UploadProgress,
@@ -164,7 +167,6 @@ impl App {
             code_sender: None,
             login_result_receiver: None,
             progress_checker_receiver: None,
-            progress_checker_sender: None,
             login_url: None,
             progress: UploadProgress {
                 procent: 0.0,
@@ -329,54 +331,12 @@ impl App {
             }
             AppState::EditingAddIngredient => self.edit_add_ingredient(),
             AppState::PickingCategory => self.confim_category(),
-            AppState::UploadFirstLogin => {
-                let (url_sender, url_receiver) = mpsc::channel(100);
-                let (code_sender, code_receiver) = mpsc::channel(100);
-                let (login_result_sender, login_result_receiver) = mpsc::channel(100);
 
-                std::thread::spawn(move || {
-                    let result = tokio::runtime::Runtime::new()
-                        .unwrap()
-                        .block_on(upload::login(url_sender, code_receiver));
-
-                    tokio::runtime::Runtime::new()
-                        .unwrap()
-                        .block_on(login_result_sender.send(result))
-                        .ok();
-                });
-
-                self.url_receiver = Some(url_receiver);
-                self.code_sender = Some(code_sender);
-                self.login_result_receiver = Some(login_result_receiver);
-
-                self.state = AppState::UploadWaitingLoginUrl;
-            }
+            AppState::UploadFirstLogin => self.upload_first_login(),
             AppState::UploadShowLoginUrl => self.state = AppState::UploadEnterCode,
-            AppState::UploadEnterCode => {
-                if let Some(sender) = &self.code_sender {
-                    tokio::runtime::Runtime::new()
-                        .unwrap()
-                        .block_on(sender.send(self.input.clone()))
-                        .ok();
-                }
-                self.input.clear();
-                self.state = AppState::UploadLogginginWait
-            }
-            AppState::UploadMenu => {
-                self.state = AppState::Uploading;
-                let shopping_list = self.shopping_list.clone();
-                let input = self.input.clone();
-                let (progress_sender, progress_receiver) = mpsc::channel(100);
+            AppState::UploadEnterCode => self.send_code(),
+            AppState::UploadMenu => self.init_upload_list(),
 
-                std::thread::spawn(move || {
-                    tokio::runtime::Runtime::new()
-                        .unwrap()
-                        .block_on(upload::upload(shopping_list, input, progress_sender))
-                        .ok();
-                });
-
-                self.progress_checker_receiver = Some(progress_receiver);
-            }
             _ => {}
         }
     }

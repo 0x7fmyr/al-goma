@@ -123,7 +123,9 @@ impl App {
                 self.cursor -= 1;
             }
             Space::MainRight => match self.state {
-                AppState::ViewingDatabase | AppState::ShowShoppingList | AppState::AddToGeneratedList => {
+                AppState::ViewingDatabase
+                | AppState::ShowShoppingList
+                | AppState::AddToGeneratedList => {
                     if self.shopping_list.is_empty()
                         && matches!(self.state, AppState::ShowShoppingList)
                     {
@@ -150,10 +152,9 @@ impl App {
                     }
                     self.picking_cursor -= 1
                 }
-                AppState::ShowGeneratedList
-                    if self.edit_cursor.cursor > 0 => {
-                        self.edit_cursor.cursor -= 1;
-                    }
+                AppState::ShowGeneratedList if self.edit_cursor.cursor > 0 => {
+                    self.edit_cursor.cursor -= 1;
+                }
                 _ => {}
             },
         }
