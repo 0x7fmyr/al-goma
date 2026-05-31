@@ -122,13 +122,13 @@ impl InstalledFlowDelegate for AlgomaFlowDelegate {
                     if needs_code {
                         let mut receiver = self.code_receiver.lock().await;
                         let code = receiver.recv().await;
-                        if code.is_none() {
-                            return Err("no code received".to_string());
+                        if let Some(code_str) = code {
+                            Ok(code_str)
                         } else {
-                            return Ok(code.unwrap());
+                            Err("no code received".to_string())
                         }
                     } else {
-                        return Ok(String::new());
+                        Ok(String::new())
                     }
                 }
                 Err(e) => Err(format!("{}", e)),
@@ -173,7 +173,7 @@ pub async fn login(
     let scopes = &["https://www.googleapis.com/auth/tasks"];
 
     match login.token(scopes).await {
-        Ok(_) => return Ok(()),
+        Ok(_) => Ok(()),
         Err(e) => Err(format!("{}", e)),
     }
 }

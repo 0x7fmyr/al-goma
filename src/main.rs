@@ -169,9 +169,8 @@ fn run(
                 }
             }
             // Polling progress_checker_receinver to know what to update the progressbar in upload
-            if let Some(progess_receiver) = &mut app.progress_checker_receiver {
-                if let Ok(i) = progess_receiver.try_recv() { app.progress = i }
-            }
+            if let Some(progess_receiver) = &mut app.progress_checker_receiver
+                && let Ok(i) = progess_receiver.try_recv() { app.progress = i }
 
             if app.progress.done {
                 // Upload is done

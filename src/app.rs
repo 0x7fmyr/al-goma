@@ -858,7 +858,7 @@ fn load_settings() -> Settings {
 
 pub fn copy_to_clipboard(input: String) -> Result<(), String> {
     match Clipboard::new().unwrap().set_text(input) {
-        Ok(_) => return Ok(()),
+        Ok(_) => Ok(()),
         Err(e) => Err(e.to_string()),
     }
 }
