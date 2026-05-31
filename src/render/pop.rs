@@ -2,7 +2,8 @@ use ratatui::layout::{Alignment, Constraint, Layout, Margin};
 use ratatui::prelude::Direction;
 use ratatui::style::{Color, Modifier, Style, Stylize};
 use ratatui::text::{Line, Span};
-use ratatui::widgets::{Block, BorderType::Rounded, Borders, Paragraph};
+use ratatui::widgets::Clear;
+use ratatui::widgets::{Block, BorderType::Rounded, Borders, Paragraph, Wrap};
 use ratatui::{Frame, layout::Rect};
 
 use crate::app::{self, AppState};
@@ -81,6 +82,63 @@ pub fn are_you_sure(window: &mut Frame, rect: Rect, app: &mut app::App, msg: Vec
                 .title_alignment(Alignment::Center),
         ),
         rect,
+    );
+}
+
+pub fn err_pop_up(window: &mut Frame, rect: Rect, msg: String) {
+    let popup_h = Layout::default()
+        .direction(Direction::Horizontal)
+        .constraints([
+            Constraint::Fill(1),
+            Constraint::Length(50),
+            Constraint::Fill(1),
+        ])
+        .split(rect);
+
+    let popup_v = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints([
+            Constraint::Fill(1),
+            Constraint::Length(11),
+            Constraint::Fill(1),
+        ])
+        .split(popup_h[1]);
+
+    window.render_widget(Clear, popup_v[1]);
+
+    let err_window = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints([
+            Constraint::Length(2),
+            Constraint::Length(1),
+            Constraint::Fill(1),
+        ])
+        .split(popup_v[1].inner(Margin {
+            horizontal: 2,
+            vertical: 1,
+        }));
+
+    window.render_widget(
+        Paragraph::default().alignment(Alignment::Left).block(
+            Block::bordered()
+                .border_style(Style::default().fg(Color::Red))
+                .border_type(Rounded)
+                .borders(Borders::ALL)
+                .title_alignment(Alignment::Center),
+        ),
+        popup_v[1],
+    );
+
+    window.render_widget(
+        Paragraph::new("Error:").alignment(Alignment::Center),
+        err_window[0],
+    );
+
+    window.render_widget(
+        Paragraph::new(msg)
+            .alignment(Alignment::Left)
+            .wrap(Wrap { trim: true }),
+        err_window[2],
     );
 }
 
@@ -360,5 +418,3 @@ pub fn print_txt_options(window: &mut Frame, rect: Rect, app: &mut app::App) {
         options_text[1],
     );
 }
-
-

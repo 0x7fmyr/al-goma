@@ -15,6 +15,8 @@ use ratatui::prelude::CrosstermBackend;
 use std::error::Error;
 use std::io::stdout;
 
+use chrono::Utc;
+
 use crate::app::AppState;
 use crate::upload::UploadProgress;
 
@@ -52,6 +54,7 @@ fn run(
             if matches!(app.state, AppState::UploadShowLoginUrl)
                 || matches!(app.state, AppState::UploadEnterCode)
             {
+                //UploadShowLoginUrl kill main ui in favor of only text
                 render::render_upload::show_login_url(window, window.area(), app);
             } else {
                 if window.area().height <= 20 || window.area().width <= 75 {
@@ -126,41 +129,56 @@ fn run(
             }
         })?;
 
-        if matches!(app.state, AppState::UploadWaitingLoginUrl) {
-            if let Some(receiver) = &mut app.url_receiver {
-                if let Ok(url) = receiver.try_recv() {
+        if matches!(app.state, AppState::UploadWaitingForLoginUrl) {
+            // Polling url_receiver if google has sent the link
+
+            if let Some(receiver) = &mut app.url_receiver
+                && let Ok(url) = receiver.try_recv() {
                     app.login_url = Some(url);
                     app.state = AppState::UploadShowLoginUrl
+                }
+        }
+
+        if matches!(app.state, AppState::UploadLogginginWait) {
+            // Polling to see if loggin is successful
+            if let Some(receiver) = &mut app.login_result_receiver {
+                match receiver.try_recv() {
+                    Ok(Ok(())) => {
+                        app.input = format!("Shopping List {}", Utc::now().date_naive());
+                        app.state = AppState::UploadMenu;
+                    }
+                    Ok(Err(e)) => {
+                        app.err_msg = Some(e.to_string());
+                        app.state = AppState::Error;
+                    }
+                    Err(_) => {}
                 }
             }
         }
 
         if matches!(app.state, AppState::Uploading) {
-            if let Some(receiver) = &mut app.progress_checker_receiver {
-                match receiver.try_recv() {
-                    Ok(i) => app.progress = i,
+            // Polling for Error handling in upload()
+            if let Some(upload_result_reciver) = &mut app.upload_result_receiver {
+                match upload_result_reciver.try_recv() {
+                    Ok(Ok(())) => {}
+                    Ok(Err(e)) => {
+                        app.err_msg = Some(e.to_string());
+                        app.state = AppState::Error;
+                    }
                     Err(_) => {}
                 }
             }
+            // Polling progress_checker_receinver to know what to update the progressbar in upload
+            if let Some(progess_receiver) = &mut app.progress_checker_receiver {
+                if let Ok(i) = progess_receiver.try_recv() { app.progress = i }
+            }
 
             if app.progress.done {
+                // Upload is done
                 app.state = AppState::UploadDone;
                 app.progress = UploadProgress {
                     procent: 0.0,
                     done: false,
-                }
-            }
-        }
-
-        if matches!(app.state, AppState::UploadLogginginWait) {
-            if let Some(receiver) = &mut app.login_result_receiver {
-                match receiver.try_recv() {
-                    Ok(Ok(())) => app.state = AppState::UploadMenu,
-                    Ok(Err(e)) => {
-                        app.err_msg = Some(e.to_string());
-                        app.state = AppState::UploadErr;
-                    }
-                    Err(_) => {}
                 }
             }
         }

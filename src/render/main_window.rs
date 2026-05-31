@@ -65,6 +65,8 @@ pub fn right(window: &mut Frame, rect: Rect, app: &mut app::App) {
         prev_state = state
     }
 
+    //ToolTips
+
     match app.state {
         AppState::EnteringDishName | AppState::EnteringIngredients => {
             tooltip = app.text_get(UiText::TTInputBox)
@@ -92,6 +94,8 @@ pub fn right(window: &mut Frame, rect: Rect, app: &mut app::App) {
         .title_position(ratatui::widgets::block::Position::Bottom);
 
     window.render_widget(Paragraph::default().block(main_block), rect);
+
+    //New List
 
     if matches!(app.state, AppState::NewList) || matches!(app.state, AppState::ReplaceList) {
         let mut w: u16 = 40;
@@ -220,6 +224,8 @@ pub fn right(window: &mut Frame, rect: Rect, app: &mut app::App) {
         }
     }
 
+    //View/Edit List
+
     if matches!(app.state, AppState::ShowShoppingList)
         || matches!(app.state, AppState::AddToShoppingList)
         || (matches!(app.state, AppState::PickingCategory)
@@ -310,6 +316,8 @@ pub fn right(window: &mut Frame, rect: Rect, app: &mut app::App) {
         }
     }
 
+    //Add Dish to Dishtabase
+
     if matches!(app.state, AppState::EnteringDishName)
         || matches!(app.state, AppState::EnteringIngredients)
         || (matches!(app.state, AppState::PickingCategory)
@@ -327,6 +335,8 @@ pub fn right(window: &mut Frame, rect: Rect, app: &mut app::App) {
     } else {
         2
     };
+
+    //View/Edit Dishtabase
 
     if matches!(app.state, AppState::ViewingDatabase)
         || matches!(app.state, AppState::EditingDish)
@@ -535,7 +545,8 @@ pub fn right(window: &mut Frame, rect: Rect, app: &mut app::App) {
     }
 
     if matches!(app.state, AppState::UploadFirstLogin)
-        || matches!(app.state, AppState::UploadWaitingLoginUrl)
+        || matches!(app.state, AppState::UploadWaitingForLoginUrl)
+        || matches!(app.state, AppState::UploadLogginginWait)
     {
         let mut msg: Vec<Line> = Vec::from([Line::from("n/a")]);
 
@@ -553,7 +564,7 @@ pub fn right(window: &mut Frame, rect: Rect, app: &mut app::App) {
                 Line::from(app.text_get(UiText::UPFirstLogin4)),
             ]);
         }
-        if matches!(app.state, AppState::UploadWaitingLoginUrl) {
+        if matches!(app.state, AppState::UploadWaitingForLoginUrl) {
             msg = Vec::from([Line::from(Span::styled(
                 app.text_get(UiText::UPWaiting4Url),
                 Style::new().add_modifier(Modifier::BOLD),
@@ -567,10 +578,20 @@ pub fn right(window: &mut Frame, rect: Rect, app: &mut app::App) {
         }
         render_upload::login_popup(window, rect, msg);
     }
+
+    // Upload
+
     if matches!(app.state, AppState::UploadMenu)
         || matches!(app.state, AppState::Uploading)
         || matches!(app.state, AppState::UploadDone)
     {
         render_upload::upload_menu(window, rect, app);
+    }
+
+    // Error Popup
+
+    if matches!(app.state, AppState::Error) {
+        let error_msg = app.err_msg.clone().unwrap();
+        pop::err_pop_up(window, rect, error_msg);
     }
 }

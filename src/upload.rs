@@ -1,15 +1,12 @@
 use serde::Deserialize;
 use serde::Serialize;
+use std::{fs, pin::Pin};
 use tokio::sync::mpsc;
 use tokio::sync::mpsc::{Receiver, Sender};
-
 use yup_oauth2::{InstalledFlowAuthenticator, authenticator_delegate::InstalledFlowDelegate};
 
-use std::{fs, pin::Pin};
-
-use crate::items::Ingredient;
-
 use crate::app::{App, AppState};
+use crate::items::Ingredient;
 
 pub struct AlgomaFlowDelegate {
     url_sender: Sender<String>,
@@ -57,7 +54,7 @@ impl App {
         self.code_sender = Some(code_sender);
         self.login_result_receiver = Some(login_result_receiver);
 
-        self.state = AppState::UploadWaitingLoginUrl;
+        self.state = AppState::UploadWaitingForLoginUrl;
     }
 
     pub fn send_code(&mut self) {
@@ -76,14 +73,21 @@ impl App {
         let shopping_list = self.shopping_list.clone();
         let input = self.input.clone();
         let (progress_sender, progress_receiver) = mpsc::channel(100);
+        let (upload_result_sender, upload_result_receiver) = mpsc::channel(100);
 
         std::thread::spawn(move || {
+            let result = tokio::runtime::Runtime::new().unwrap().block_on(upload(
+                shopping_list,
+                input,
+                progress_sender,
+            ));
+
             tokio::runtime::Runtime::new()
                 .unwrap()
-                .block_on(upload(shopping_list, input, progress_sender))
+                .block_on(upload_result_sender.send(result))
                 .ok();
         });
-
+        self.upload_result_receiver = Some(upload_result_receiver);
         self.progress_checker_receiver = Some(progress_receiver);
     }
 }
@@ -127,8 +131,8 @@ impl InstalledFlowDelegate for AlgomaFlowDelegate {
                         return Ok(String::new());
                     }
                 }
-                Err(e) => return Err(format!("{}", e)),
-            };
+                Err(e) => Err(format!("{}", e)),
+            }
         })
     }
 }
@@ -156,7 +160,7 @@ pub async fn login(
     )
     .persist_tokens_to_disk(token_path)
     .flow_delegate(Box::new(AlgomaFlowDelegate {
-        url_sender: url_sender,
+        url_sender,
         code_receiver: tokio::sync::Mutex::new(code_receiver),
     }))
     .build()
@@ -170,8 +174,8 @@ pub async fn login(
 
     match login.token(scopes).await {
         Ok(_) => return Ok(()),
-        Err(e) => return Err(format!("{}", e)),
-    };
+        Err(e) => Err(format!("{}", e)),
+    }
 }
 
 pub async fn upload(
@@ -254,9 +258,7 @@ pub async fn upload(
         {
             Ok(_) => {
                 progress.procent = i as f64 / shopping_list.len() as f64;
-
-                progress_sender.send(progress.clone()).await.ok();
-
+                progress_sender.send(progress).await.ok();
                 continue;
             }
             Err(e) => return Err(e.to_string()),
@@ -270,5 +272,5 @@ pub async fn upload(
         .await
         .ok();
 
-    return Ok(());
+    Ok(())
 }

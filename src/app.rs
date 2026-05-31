@@ -57,11 +57,10 @@ pub enum AppState {
 
     UploadMenu,
     UploadFirstLogin,
-    UploadWaitingLoginUrl,
+    UploadWaitingForLoginUrl,
     UploadShowLoginUrl,
     UploadEnterCode,
     UploadLogginginWait,
-    UploadErr,
     Uploading,
     UploadDone,
 }
@@ -97,6 +96,7 @@ pub struct App {
     pub code_sender: Option<mpsc::Sender<String>>,
     pub login_result_receiver: Option<mpsc::Receiver<Result<(), String>>>,
     pub progress_checker_receiver: Option<mpsc::Receiver<upload::UploadProgress>>,
+    pub upload_result_receiver: Option<mpsc::Receiver<Result<(), String>>>,
 
     pub login_url: Option<String>,
     pub progress: upload::UploadProgress,
@@ -167,6 +167,7 @@ impl App {
             code_sender: None,
             login_result_receiver: None,
             progress_checker_receiver: None,
+            upload_result_receiver: None,
             login_url: None,
             progress: UploadProgress {
                 procent: 0.0,
@@ -250,7 +251,7 @@ impl App {
                         Ok(true) => {
                             self.state = AppState::UploadMenu;
                             self.input =
-                                format!("Shopping List {}", Utc::now().date_naive().to_string());
+                                format!("Shopping List {}", Utc::now().date_naive());
                         }
                         Ok(false) => self.state = AppState::UploadFirstLogin,
                         Err(s) => {
@@ -264,7 +265,7 @@ impl App {
                 self.moving_focus = false
             }
             AppState::NewList => {
-                if self.db.dishes.len() == 0 {
+                if self.db.dishes.is_empty() {
                     return;
                 }
                 self.generate_list();
@@ -858,13 +859,13 @@ fn load_settings() -> Settings {
 pub fn copy_to_clipboard(input: String) -> Result<(), String> {
     match Clipboard::new().unwrap().set_text(input) {
         Ok(_) => return Ok(()),
-        Err(e) => return Err(e.to_string()),
-    };
+        Err(e) => Err(e.to_string()),
+    }
 }
 
 pub fn paste_from_clipboard() -> Result<String, String> {
     match Clipboard::new().unwrap().get_text() {
-        Ok(s) => return Ok(s),
-        Err(e) => return Err(e.to_string()),
+        Ok(s) => Ok(s),
+        Err(e) => Err(e.to_string()),
     }
 }

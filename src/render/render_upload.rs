@@ -1,6 +1,7 @@
 use ratatui::layout::{Alignment, Constraint, Layout, Margin};
 use ratatui::prelude::Direction;
 use ratatui::style::{Color, Modifier, Style, Stylize};
+use ratatui::symbols::line::{THICK};
 use ratatui::text::Line;
 
 use ratatui::widgets::{Block, BorderType::Rounded, Borders, Clear, LineGauge, Paragraph, Wrap};
@@ -51,10 +52,8 @@ pub fn login_popup(window: &mut Frame, rect: Rect, msg: Vec<Line>) {
 }
 
 pub fn show_login_url(window: &mut Frame, rect: Rect, app: &mut app::App) {
-    let msg = vec![
-        Line::from(app.text_get(UiText::UPGo2ThisUrl)),
-        Line::from(app.text_get(UiText::UPGo2ThisUrlToolTip)),
-    ];
+    let msg = [Line::from(app.text_get(UiText::UPGo2ThisUrl)),
+        Line::from(app.text_get(UiText::UPGo2ThisUrlToolTip))];
     let url = app.login_url.clone().unwrap();
 
     let text = Layout::default()
@@ -121,7 +120,9 @@ pub fn upload_menu(window: &mut Frame, rect: Rect, app: &mut app::App) {
         );
     } else if matches!(app.state, AppState::Uploading) {
         let gauge = LineGauge::default()
-            .filled_style(Style::new().blue().on_black().bold())
+            .filled_style(Style::new().blue().add_modifier(Modifier::BOLD))
+            .line_set(THICK)
+            .unfilled_style(Style::new().dark_gray())
             .ratio(app.progress.procent);
 
         window.render_widget(gauge, content[2]);
