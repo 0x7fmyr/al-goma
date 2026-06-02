@@ -133,10 +133,11 @@ fn run(
             // Polling url_receiver if google has sent the link
 
             if let Some(receiver) = &mut app.url_receiver
-                && let Ok(url) = receiver.try_recv() {
-                    app.login_url = Some(url);
-                    app.state = AppState::UploadShowLoginUrl
-                }
+                && let Ok(url) = receiver.try_recv()
+            {
+                app.login_url = Some(url);
+                app.state = AppState::UploadShowLoginUrl
+            }
         }
 
         if matches!(app.state, AppState::UploadLogginginWait) {
@@ -169,8 +170,10 @@ fn run(
                 }
             }
             // Polling progress_checker_receinver to know what to update the progressbar in upload
-            if let Some(progess_receiver) = &mut app.progress_checker_receiver {
-                if let Ok(i) = progess_receiver.try_recv() { app.progress = i }
+            if let Some(progess_receiver) = &mut app.progress_checker_receiver
+                && let Ok(i) = progess_receiver.try_recv()
+            {
+                app.progress = i
             }
 
             if app.progress.done {
@@ -255,7 +258,7 @@ fn run(
                         | AppState::EditingAddIngredient
                         | AppState::NewList
                         | AppState::AddToShoppingList
-                        | AppState::UploadEnterCode => app.keyboard_input('q'),
+                        | AppState::UploadEnterCode => app.char_input('q'),
                         _ => break,
                     },
                     KeyCode::Esc => app.handle_esc(),
@@ -280,23 +283,23 @@ fn run(
                                 Err(e) => app.err_msg = Some(e),
                             }
                         } else {
-                            app.keyboard_input('p')
+                            app.char_input('p')
                         }
                     }
                     KeyCode::Char('c') => {
                         if matches!(app.state, AppState::UploadShowLoginUrl) {
                             app::copy_to_clipboard(app.login_url.clone().unwrap()).ok();
                         } else {
-                            app.keyboard_input('c');
+                            app.char_input('c');
                         }
                     }
 
-                    KeyCode::Char(ch) => app.keyboard_input(ch),
+                    KeyCode::Char(ch) => app.char_input(ch),
 
                     KeyCode::Backspace => app.backspace(),
                     KeyCode::Delete => app.handle_delete(),
-
                     KeyCode::Enter => app.handle_enter(),
+                    KeyCode::Tab => app.handle_tab(),
 
                     _ => {}
                 },

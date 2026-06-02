@@ -305,16 +305,40 @@ pub fn pick_category(
 }
 
 pub fn input_box(window: &mut Frame, rect: Rect, app: &mut app::App, title_msg: String) {
+    let mut inline: String = "".to_string();
+    let mut cursor = Span::styled(
+        "_",
+        Style::new()
+            .fg(Color::LightBlue)
+            .add_modifier(Modifier::SLOW_BLINK),
+    );
+
+    if let Some(inline_autocomplete) = app.inline_complete.clone() {
+        inline = inline_autocomplete.clone();
+
+        let first_letter = if inline_autocomplete.len() > 0 {
+            inline.chars().nth(0).unwrap().to_string()
+        } else {
+            String::new()
+        };
+
+        cursor = Span::styled(
+            first_letter.to_string(),
+            Style::new()
+                .fg(Color::LightBlue)
+                .add_modifier(Modifier::SLOW_BLINK | Modifier::UNDERLINED),
+        );
+
+        if inline.len() > 0 {
+            inline.remove(0).to_string();
+        }
+    }
+
     let input = vec![
         Span::raw(" "),
         Span::raw(app.input.clone()),
-        Span::styled(
-            "_",
-            Style::new()
-                .fg(Color::LightBlue)
-                .add_modifier(Modifier::SLOW_BLINK)
-                .add_modifier(Modifier::BOLD),
-        ),
+        cursor,
+        Span::styled(inline, Style::new().fg(Color::DarkGray)),
     ];
 
     window.render_widget(

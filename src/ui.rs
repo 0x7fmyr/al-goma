@@ -25,6 +25,10 @@ impl App {
     }
 
     pub fn move_focus_right(&mut self) {
+        if self.state == AppState::Normal {
+            return;
+        }
+
         if self.state == AppState::AreYouSureDelDish || self.state == AppState::ReplaceList {
             self.move_cursor_down();
             return;
@@ -47,7 +51,8 @@ impl App {
 
         match self.selected_space {
             Space::MainLeft => {
-                if self.cursor == self.left_window_actions.len() {
+                if self.cursor == self.left_window_actions.len() - 1 {
+                    self.cursor = 0;
                     return;
                 }
                 if self.cursor < self.left_window_actions.len() - 1 {
@@ -117,6 +122,7 @@ impl App {
         match self.selected_space {
             Space::MainLeft => {
                 if self.cursor == 0 {
+                    self.cursor = 4;
                     return;
                 }
 

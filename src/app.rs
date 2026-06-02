@@ -86,10 +86,16 @@ pub struct App {
     pub db: Database,
     pub state: AppState,
     pub prev_state: Option<AppState>,
+
     pub input: String,
+    pub inline_complete: Option<String>,
+    pub inline_complete_whole_word: Option<String>,
+
     pub pending_dish: Option<Dish>,
     pub category_db: HashMap<String, Category>,
     pub normalized_category_db: HashMap<String, Category>,
+    pub non_normalized_category_db: HashMap<String, Category>,
+
     pub err_msg: Option<String>,
 
     pub url_receiver: Option<mpsc::Receiver<String>>,
@@ -152,14 +158,19 @@ impl App {
             db: db::load(),
 
             category_db: ingredient_category_db.clone(),
+
             normalized_category_db: ingredient_category_db
+                .clone()
                 .into_iter()
                 .map(|(k, v)| (k.replace(' ', ""), v))
                 .collect(),
 
+            non_normalized_category_db: ingredient_category_db,
             state: AppState::Normal,
             prev_state: None,
             input: String::new(),
+            inline_complete: None,
+            inline_complete_whole_word: None,
             pending_dish: None,
             left_window_actions,
             err_msg: None,
@@ -176,19 +187,22 @@ impl App {
         }
     }
 
-    pub fn keyboard_input(&mut self, c: char) {
+    pub fn char_input(&mut self, c: char) {
         match self.state {
             AppState::EnteringDishName
-            | AppState::EnteringIngredients
-            | AppState::EditingIngredient
             | AppState::EditingDishName
-            | AppState::EditingAddIngredient
             | AppState::NewList
             | AppState::AddToShoppingList
             | AppState::UploadEnterCode
-            | AppState::UploadMenu => {
+            | AppState::UploadMenu => self.input.push(c),
+
+            AppState::EnteringIngredients
+            | AppState::EditingIngredient
+            | AppState::EditingAddIngredient => {
                 self.input.push(c);
+                self.update_inline_complete_ingredients()
             }
+
             _ => {}
         }
     }
@@ -196,9 +210,6 @@ impl App {
     pub fn backspace(&mut self) {
         match self.state {
             AppState::EnteringDishName
-            | AppState::EnteringIngredients
-            | AppState::EditingIngredient
-            | AppState::EditingAddIngredient
             | AppState::EditingDishName
             | AppState::NewList
             | AppState::AddToShoppingList
@@ -206,8 +217,42 @@ impl App {
             | AppState::UploadMenu => {
                 self.input.pop();
             }
+
+            AppState::EnteringIngredients
+            | AppState::EditingIngredient
+            | AppState::EditingAddIngredient => {
+                self.input.pop();
+                self.update_inline_complete_ingredients();
+            }
             _ => {}
         }
+
+        self.update_inline_complete_ingredients();
+    }
+
+    fn update_inline_complete_ingredients(&mut self) {
+        self.inline_complete = None;
+        self.inline_complete_whole_word = None;
+        for key in self.non_normalized_category_db.keys() {
+            if key.starts_with(&self.input.to_lowercase()) {
+                self.inline_complete_whole_word = Some(key.clone());
+                let inline: &str = &key[self.input.len()..];
+                self.inline_complete = Some(inline.to_string());
+                break;
+            }
+        }
+        if self.input.is_empty() {
+            self.inline_complete = None;
+            self.inline_complete_whole_word = None
+        }
+    }
+
+    fn tab_complete(&mut self) {
+        if let Some(inline_complete) = self.inline_complete_whole_word.clone() {
+            self.input = inline_complete;
+        }
+        self.inline_complete = None;
+        self.inline_complete_whole_word = None
     }
 
     pub fn handle_enter(&mut self) {
@@ -250,8 +295,7 @@ impl App {
                     match upload::does_token_exist() {
                         Ok(true) => {
                             self.state = AppState::UploadMenu;
-                            self.input =
-                                format!("Shopping List {}", Utc::now().date_naive());
+                            self.input = format!("Shopping List {}", Utc::now().date_naive());
                         }
                         Ok(false) => self.state = AppState::UploadFirstLogin,
                         Err(s) => {
@@ -395,6 +439,20 @@ impl App {
                 self.state = AppState::AreYouSureDelDish;
             }
             AppState::ShowGeneratedList => self.generate_new_dish(),
+            _ => {}
+        }
+    }
+
+    pub fn handle_tab(&mut self) {
+        match self.state {
+            AppState::EnteringDishName
+            | AppState::EnteringIngredients
+            | AppState::EditingIngredient
+            | AppState::EditingDishName
+            | AppState::EditingAddIngredient
+            | AppState::NewList
+            | AppState::AddToShoppingList
+            | AppState::UploadEnterCode => self.tab_complete(),
             _ => {}
         }
     }
@@ -661,6 +719,8 @@ impl App {
             self.state = AppState::PickingCategory
         }
 
+        self.inline_complete = None;
+        self.inline_complete_whole_word = None;
         self.input.clear();
     }
 
@@ -858,7 +918,7 @@ fn load_settings() -> Settings {
 
 pub fn copy_to_clipboard(input: String) -> Result<(), String> {
     match Clipboard::new().unwrap().set_text(input) {
-        Ok(_) => return Ok(()),
+        Ok(_) => Ok(()),
         Err(e) => Err(e.to_string()),
     }
 }

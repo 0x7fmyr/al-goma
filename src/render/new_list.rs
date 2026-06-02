@@ -273,6 +273,8 @@ pub fn show_generated_list_ingredients(window: &mut Frame, rect: Rect, app: &mut
                 || app.state == AppState::AreYouSureDelDish
                 || app.state == AppState::EditingAddIngredient
                 || app.state == AppState::PickingCategory
+                || app.state == AppState::AddToShoppingList
+                || app.moving_focus
             {
                 t = Modifier::empty();
             }

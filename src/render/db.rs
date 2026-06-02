@@ -289,6 +289,7 @@ pub fn dish_database(window: &mut Frame, rect: Rect, app: &mut app::App) {
                     || app.state == AppState::AreYouSureDelDish
                     || app.state == AppState::EditingAddIngredient
                     || app.state == AppState::PickingCategory
+                    || app.moving_focus
                 {
                     t = Modifier::empty();
                 }
