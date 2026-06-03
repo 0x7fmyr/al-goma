@@ -1,6 +1,31 @@
-use crate::items::Database;
+use crate::{
+    app::{App, AppState},
+    items::Database,
+};
 use std::fs;
+impl App {
+    pub fn start_editing_dish(&mut self) {
+        if self.db.dishes.is_empty() {
+            return;
+        }
+        self.state = AppState::EditingDish;
+    }
 
+    pub fn confirm_editing_dish(&mut self){
+        self.state = AppState::EditingIngredient;
+        self.pending_dish = Some(self.db.dishes[self.db_cursor.cursor].to_owned());
+    }
+
+    pub fn delete_dish_option(&mut self){
+        if self.ays_cursor == 0 {
+            self.delete_dish();
+        } else {
+            self.state = AppState::ViewingDatabase
+        }
+
+    }
+    
+}
 pub fn load() -> Database {
     let config_folder = dirs::config_dir()
         .expect("failed to find config path...")

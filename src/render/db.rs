@@ -11,13 +11,18 @@ use ratatui::{Frame, layout::Rect};
 use super::pop;
 use crate::app::{self, AppState};
 use crate::locale::UiText;
+use crate::render::main_window;
 
-pub fn edit_widow(window: &mut Frame, rect: Rect, app: &mut app::App) {
+pub fn edit_widow(window: &mut Frame, rect: Rect, app: &mut app::App, size_h_w: (u16, u16)) {
     let vertical_scroll = app.edit_cursor.scroll;
+
+    let popup = main_window::center_rect(rect, size_h_w.0, size_h_w.1);
+
+    window.render_widget(Clear, popup);
 
     let edit_window = Layout::default()
         .constraints([Constraint::Fill(1)])
-        .split(rect.inner(Margin {
+        .split(popup.inner(Margin {
             horizontal: 2,
             vertical: 2,
         }));
@@ -138,7 +143,7 @@ pub fn edit_widow(window: &mut Frame, rect: Rect, app: &mut app::App) {
     if app.db.dishes[app.db_cursor.cursor].ingredients.len() > app.edit_cursor.visable_lines {
         window.render_stateful_widget(
             scrollbar,
-            rect.inner(Margin {
+            popup.inner(Margin {
                 // using an inner vertical margin of 1 unit makes the scrollbar inside the block
                 vertical: 3,
                 horizontal: 2,
@@ -155,7 +160,7 @@ pub fn edit_widow(window: &mut Frame, rect: Rect, app: &mut app::App) {
                 .title(app.db.dishes[app.db_cursor.cursor].name.to_string())
                 .title_alignment(Alignment::Center),
         ),
-        rect,
+        popup,
     );
 }
 
@@ -207,39 +212,9 @@ pub fn add_dish(window: &mut Frame, rect: Rect, app: &mut app::App, prev_state: 
         );
     }
     if matches!(app.state, AppState::PickingCategory) {
-        let mut input_w: u16 = 38;
-        let mut input_h: u16 = 14;
-        let center_y: u16;
-        let center_x: u16;
-
-        if rect.height >= 40 || rect.width >= 40 {
-            center_y = rect.y + (rect.height / 2) - (input_h / 2);
-            center_x = rect.x + (rect.width / 2) - (input_w / 2);
-        } else {
-            center_y = 0;
-            center_x = 0;
-            input_h = 0;
-            input_w = 0;
-        }
-
-        window.render_widget(
-            Clear,
-            Rect {
-                x: center_x,
-                y: center_y,
-                width: input_w,
-                height: input_h,
-            },
-        );
-
         pop::pick_category(
             window,
-            Rect {
-                x: center_x,
-                y: center_y,
-                width: input_w,
-                height: input_h,
-            },
+            rect,
             app,
             prev_state,
             app.pending_dish
@@ -250,6 +225,7 @@ pub fn add_dish(window: &mut Frame, rect: Rect, app: &mut app::App, prev_state: 
                 .unwrap()
                 .name
                 .clone(),
+            (14, 38),
         );
     }
 }

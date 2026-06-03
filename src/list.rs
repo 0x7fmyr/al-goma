@@ -1,12 +1,53 @@
-use crate::app::{App, AppState};
-use crate::items::{Database, Dish, Ingredient};
-use std::collections::HashSet;
-use std::fs;
-
-use rand::Rng;
-use serde::{Deserialize, Serialize};
+use crate::{
+    app::{App, AppState, Space},
+    items::{Database, Dish, Ingredient},
+    list,
+};
+use {
+    rand::Rng,
+    serde::{Deserialize, Serialize},
+    std::collections::HashSet,
+    std::fs,
+};
 
 impl App {
+    pub fn start_new_list(&mut self) {
+        if self.db.dishes.is_empty() {
+            return;
+        }
+        self.generate_list();
+        self.state = AppState::ShowGeneratedList
+    }
+
+    pub fn replace_old_list(&mut self) {
+        if self.ays_cursor == 0 {
+            self.current_dish_list = None;
+            self.state = AppState::NewList
+        } else {
+            self.state = AppState::Normal;
+            self.selected_space = Space::MainLeft
+        }
+    }
+
+    pub fn show_and_save_generated_list(&mut self) {
+        self.state = AppState::ShowShoppingList;
+
+        list::make_shopping_list(self.current_dish_list.clone(), &mut self.shopping_list);
+        list::save_list(self.current_dish_list.clone());
+        list::save_shopping_list_config(self.shopping_list.clone());
+
+        self.cursor = 1;
+    }
+
+    pub fn print_promt_confirm_options(&mut self) {
+        if self.ays_cursor == 0 {
+            self.text_options.0 = !self.text_options.0;
+        }
+        if self.ays_cursor == 1 {
+            self.text_options.1 = !self.text_options.1;
+        }
+    }
+
     pub fn generate_list(&mut self) {
         if self.db.dishes.is_empty() {
             return;
@@ -25,7 +66,7 @@ impl App {
             self.state = AppState::Normal;
             return;
         }
-    
+
         let mut found_dishes: Vec<Dish> = Vec::new();
         let mut i = 0;
 

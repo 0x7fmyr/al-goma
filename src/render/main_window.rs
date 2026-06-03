@@ -58,7 +58,6 @@ pub fn left(window: &mut Frame, rect: Rect, app: &mut app::App) {
 }
 
 pub fn right(window: &mut Frame, rect: Rect, app: &mut app::App) {
-    let mut tooltip = String::from("");
     let mut prev_state = AppState::Normal;
 
     if let Some(state) = app.prev_state {
@@ -67,24 +66,22 @@ pub fn right(window: &mut Frame, rect: Rect, app: &mut app::App) {
 
     //ToolTips
 
-    match app.state {
+    let tooltip: String = match app.state {
         AppState::EnteringDishName | AppState::EnteringIngredients => {
-            tooltip = app.text_get(UiText::TTInputBox)
+            app.text_get(UiText::TTInputBox)
         }
-        AppState::ViewingDatabase => tooltip = app.text_get(UiText::TTViewingDb),
-        AppState::EditingDish => tooltip = app.text_get(UiText::TTEditingDish),
+        AppState::ViewingDatabase => app.text_get(UiText::TTViewingDb),
+        AppState::EditingDish => app.text_get(UiText::TTEditingDish),
         AppState::EditingIngredient | AppState::EditingDishName => {
-            tooltip = app.text_get(UiText::TTEditingIngDName)
+            app.text_get(UiText::TTEditingIngDName)
         }
 
-        AppState::PickingCategory | AppState::AreYouSureDelDish => {
-            tooltip = app.text_get(UiText::TTPopUp)
-        }
-        AppState::ShowGeneratedList => tooltip = app.text_get(UiText::TTShowGenList),
-        AppState::ShowShoppingList => tooltip = app.text_get(UiText::TTShowShoppingList),
-        AppState::PromptPrint => tooltip = app.text_get(UiText::TTPromtPrint),
-        _ => {}
-    }
+        AppState::PickingCategory | AppState::AreYouSureDelDish => app.text_get(UiText::TTPopUp),
+        AppState::ShowGeneratedList => app.text_get(UiText::TTShowGenList),
+        AppState::ShowShoppingList => app.text_get(UiText::TTShowShoppingList),
+        AppState::PromptPrint => app.text_get(UiText::TTPromtPrint),
+        _ => "".to_string(),
+    };
 
     let main_block = Block::bordered()
         .border_style(Style::default().fg(Color::DarkGray).dim())
@@ -98,129 +95,26 @@ pub fn right(window: &mut Frame, rect: Rect, app: &mut app::App) {
     //New List
 
     if matches!(app.state, AppState::NewList) || matches!(app.state, AppState::ReplaceList) {
-        let mut w: u16 = 40;
-        let mut h: u16 = 10;
-        let center_y = rect.y + (rect.height / 2) - (h / 2);
-        let center_x = rect.x + (rect.width / 2) - (w / 2);
-
         if matches!(app.state, AppState::ReplaceList) {
-            w += 5;
-            h += 1;
             let msg = vec![
                 Line::from(app.text_get(UiText::GeneratingReplaceOld1)),
                 Line::from(app.text_get(UiText::GeneratingReplaceOld2)),
                 Line::from(app.text_get(UiText::GeneratingReplaceOld3)),
             ];
-            window.render_widget(
-                Clear,
-                Rect {
-                    x: center_x,
-                    y: center_y,
-                    width: w,
-                    height: h,
-                },
-            );
 
-            render::pop::are_you_sure(
-                window,
-                Rect {
-                    x: center_x,
-                    y: center_y,
-                    width: w,
-                    height: h,
-                },
-                app,
-                msg,
-            );
+            render::pop::are_you_sure(window, rect, app, msg, (11, 45));
         } else {
-            window.render_widget(
-                Clear,
-                Rect {
-                    x: center_x,
-                    y: center_y,
-                    width: w,
-                    height: h,
-                },
-            );
-
-            render::new_list::new_list(
-                window,
-                Rect {
-                    x: center_x,
-                    y: center_y,
-                    width: w,
-                    height: h,
-                },
-                app,
-            );
+            render::new_list::new_list(window, rect, app, (10, 45));
         }
     }
 
     if matches!(app.state, AppState::ShowGeneratedList)
         || matches!(app.state, AppState::AddToGeneratedList)
     {
-        let w: u16 = 40;
-        let h: u16 = 20;
-        let center_y = rect.y + (rect.height / 2) - (h / 2);
-        let center_x = rect.x + (rect.width / 2) - (w / 2);
-
-        window.render_widget(
-            Clear,
-            Rect {
-                x: center_x,
-                y: center_y,
-                width: w,
-                height: h,
-            },
-        );
-
-        render::new_list::show_generated_list(
-            window,
-            Rect {
-                x: center_x,
-                y: center_y,
-                width: w,
-                height: h,
-            },
-            app,
-        );
+        render::new_list::show_generated_list(window, rect, app, (20, 40));
 
         if matches!(app.state, AppState::AddToGeneratedList) {
-            let mut input_w: u16 = 50;
-            let mut input_h: u16 = 14;
-            let center_y: u16;
-            let center_x: u16;
-
-            if rect.height >= 40 || rect.width >= 40 {
-                center_y = rect.y + (rect.height / 2) - (input_h / 2);
-                center_x = rect.x + (rect.width / 2) - (input_w / 2);
-            } else {
-                center_y = 0;
-                center_x = 0;
-                input_h = 0;
-                input_w = 0;
-            }
-
-            window.render_widget(
-                Clear,
-                Rect {
-                    x: center_x,
-                    y: center_y,
-                    width: input_w,
-                    height: input_h,
-                },
-            );
-
-            pop::add_to_generated_list(
-                window,
-                Rect {
-                    x: center_x,
-                    y: center_y,
-                    width: input_w,
-                    height: input_h,
-                },
-                app,
-            );
+            pop::add_to_generated_list(window, rect, app, (14, 50)); //todo! add scrollbar
         }
     }
 
@@ -235,84 +129,12 @@ pub fn right(window: &mut Frame, rect: Rect, app: &mut app::App) {
         new_list::show_generated_list_ingredients(window, rect, app);
 
         if matches!(app.state, AppState::PickingCategory) {
-            let mut input_w: u16 = 38;
-            let mut input_h: u16 = 14;
-            let center_y: u16;
-            let center_x: u16;
-
-            if rect.height >= 40 || rect.width >= 40 {
-                center_y = rect.y + (rect.height / 2) - (input_h / 2);
-                center_x = rect.x + (rect.width / 2) - (input_w / 2);
-            } else {
-                center_y = 0;
-                center_x = 0;
-                input_h = 0;
-                input_w = 0;
-            }
-
-            window.render_widget(
-                Clear,
-                Rect {
-                    x: center_x,
-                    y: center_y,
-                    width: input_w,
-                    height: input_h,
-                },
-            );
-
             let i_name = app.shopping_list.last().unwrap().name.clone();
-
-            pop::pick_category(
-                window,
-                Rect {
-                    x: center_x,
-                    y: center_y,
-                    width: input_w,
-                    height: input_h,
-                },
-                app,
-                prev_state,
-                i_name,
-            );
+            pop::pick_category(window, rect, app, prev_state, i_name, (14, 38));
         }
 
         if matches!(app.state, AppState::PromptPrint) {
-            let mut input_w: u16 = 38;
-            let mut input_h: u16 = 10;
-            let center_y: u16;
-            let center_x: u16;
-
-            if rect.height >= 14 || rect.width >= 38 {
-                center_y = rect.y + (rect.height / 2) - (input_h / 2);
-                center_x = rect.x + (rect.width / 2) - (input_w / 2);
-            } else {
-                center_y = 0;
-                center_x = 0;
-                input_h = 0;
-                input_w = 0;
-            }
-            // todo: work!
-
-            window.render_widget(
-                Clear,
-                Rect {
-                    x: center_x,
-                    y: center_y,
-                    width: input_w,
-                    height: input_h,
-                },
-            );
-
-            pop::print_txt_options(
-                window,
-                Rect {
-                    x: center_x,
-                    y: center_y,
-                    width: input_w,
-                    height: input_h,
-                },
-                app,
-            );
+            pop::print_txt_options(window, rect, app, (10, 38));
         }
     }
 
@@ -325,16 +147,6 @@ pub fn right(window: &mut Frame, rect: Rect, app: &mut app::App) {
     {
         db::add_dish(window, rect, app, prev_state);
     }
-
-    let input_w: u16 = rect.width / 2 + rect.width / 3;
-    let input_h: u16 = 3;
-    let center_x = rect.x + (rect.width / 2) - (input_w / 2);
-
-    let center_y: u16 = if rect.height > 3 {
-        rect.y + (rect.height - 8 / 2) - (input_h / 2)
-    } else {
-        2
-    };
 
     //View/Edit Dishtabase
 
@@ -354,77 +166,14 @@ pub fn right(window: &mut Frame, rect: Rect, app: &mut app::App) {
             || matches!(app.state, AppState::EditingAddIngredient)
             || matches!(app.state, AppState::PickingCategory)
         {
-            let mut input_w: u16 = 40;
-            let input_h: u16 = (rect.height * 4) / 6;
-            let center_y: u16;
-            let center_x: u16;
-
-            if rect.height > (rect.height * 3) / 4 && rect.width > 30 {
-                center_y = rect.y + (rect.height / 2) - (input_h / 2);
-                center_x = rect.x + (rect.width / 2) - (input_w / 2);
-            } else {
-                input_w = 2;
-                center_y = 2;
-                center_x = 2
-            }
-
-            window.render_widget(
-                Clear,
-                Rect {
-                    x: center_x,
-                    y: center_y,
-                    width: input_w,
-                    height: input_h,
-                },
-            );
-
             if rect.height > 12 {
-                db::edit_widow(
-                    window,
-                    Rect {
-                        x: center_x,
-                        y: center_y,
-                        width: input_w,
-                        height: input_h,
-                    },
-                    app,
-                );
+                db::edit_widow(window, rect, app, ((rect.height * 4) / 6, 45));
             }
 
             if matches!(app.state, AppState::PickingCategory) {
-                let mut input_w: u16 = 38;
-                let mut input_h: u16 = 14;
-                let center_y: u16;
-                let center_x: u16;
-
-                if rect.height >= 40 || rect.width >= 40 {
-                    center_y = rect.y + (rect.height / 2) - (input_h / 2);
-                    center_x = rect.x + (rect.width / 2) - (input_w / 2);
-                } else {
-                    center_y = 0;
-                    center_x = 0;
-                    input_h = 0;
-                    input_w = 0;
-                }
-
-                window.render_widget(
-                    Clear,
-                    Rect {
-                        x: center_x,
-                        y: center_y,
-                        width: input_w,
-                        height: input_h,
-                    },
-                );
-
                 pop::pick_category(
                     window,
-                    Rect {
-                        x: center_x,
-                        y: center_y,
-                        width: input_w,
-                        height: input_h,
-                    },
+                    rect,
                     app,
                     prev_state,
                     app.pending_dish
@@ -435,36 +184,12 @@ pub fn right(window: &mut Frame, rect: Rect, app: &mut app::App) {
                         .unwrap()
                         .name
                         .clone(),
+                    (14, 38),
                 );
             }
         }
 
         if matches!(app.state, AppState::AreYouSureDelDish) {
-            let mut input_w: u16 = 50;
-            let mut input_h: u16 = 11;
-            let center_y: u16;
-            let center_x: u16;
-
-            if rect.height >= 40 || rect.width >= 40 {
-                center_y = rect.y + (rect.height / 2) - (input_h / 2);
-                center_x = rect.x + (rect.width / 2) - (input_w / 2);
-            } else {
-                center_y = 0;
-                center_x = 0;
-                input_h = 0;
-                input_w = 0;
-            }
-
-            window.render_widget(
-                Clear,
-                Rect {
-                    x: center_x,
-                    y: center_y,
-                    width: input_w,
-                    height: input_h,
-                },
-            );
-
             let deleting_name = app.db.dishes[app.db_cursor.cursor].name.clone();
             let msg = vec![
                 Line::from(format!(
@@ -476,44 +201,14 @@ pub fn right(window: &mut Frame, rect: Rect, app: &mut app::App) {
                 Line::from(app.text_get(UiText::DeletingAys2)),
             ];
 
-            pop::are_you_sure(
-                window,
-                Rect {
-                    x: center_x,
-                    y: center_y,
-                    width: input_w,
-                    height: input_h,
-                },
-                app,
-                msg,
-            );
+            pop::are_you_sure(window, rect, app, msg, (50, 11));
         }
     }
 
     if matches!(app.state, AppState::EnteringDishName)
         || matches!(app.state, AppState::EditingDishName)
     {
-        window.render_widget(
-            Clear,
-            Rect {
-                x: center_x,
-                y: center_y,
-                width: input_w,
-                height: input_h,
-            },
-        );
-
-        pop::input_box(
-            window,
-            Rect {
-                x: center_x,
-                y: center_y,
-                width: input_w,
-                height: input_h,
-            },
-            app,
-            app.text_get(UiText::PPEnterDishName),
-        );
+        pop::input_box(window, rect, app, app.text_get(UiText::PPEnterDishName));
     }
 
     if matches!(app.state, AppState::EnteringIngredients)
@@ -521,27 +216,7 @@ pub fn right(window: &mut Frame, rect: Rect, app: &mut app::App) {
         || matches!(app.state, AppState::EditingAddIngredient)
         || matches!(app.state, AppState::AddToShoppingList)
     {
-        window.render_widget(
-            Clear,
-            Rect {
-                x: center_x,
-                y: center_y,
-                width: input_w,
-                height: input_h,
-            },
-        );
-
-        pop::input_box(
-            window,
-            Rect {
-                x: center_x,
-                y: center_y,
-                width: input_w,
-                height: input_h,
-            },
-            app,
-            app.text_get(UiText::PPEnterIngredient),
-        );
+        pop::input_box(window, rect, app, app.text_get(UiText::PPEnterIngredient));
     }
 
     if matches!(app.state, AppState::UploadFirstLogin)
@@ -594,4 +269,24 @@ pub fn right(window: &mut Frame, rect: Rect, app: &mut app::App) {
         let error_msg = app.err_msg.clone().unwrap();
         pop::err_pop_up(window, rect, error_msg);
     }
+}
+
+pub fn center_rect(rect: Rect, width: u16, height: u16) -> Rect {
+    let v = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints([
+            Constraint::Fill(1),
+            Constraint::Length(width),
+            Constraint::Fill(1),
+        ])
+        .split(rect);
+
+    Layout::default()
+        .direction(Direction::Horizontal)
+        .constraints([
+            Constraint::Fill(1),
+            Constraint::Length(height),
+            Constraint::Fill(1),
+        ])
+        .split(v[1])[1]
 }

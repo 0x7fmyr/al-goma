@@ -192,13 +192,13 @@ impl App {
             AppState::EnteringDishName
             | AppState::EditingDishName
             | AppState::NewList
-            | AppState::AddToShoppingList
             | AppState::UploadEnterCode
             | AppState::UploadMenu => self.input.push(c),
 
             AppState::EnteringIngredients
             | AppState::EditingIngredient
-            | AppState::EditingAddIngredient => {
+            | AppState::EditingAddIngredient
+            | AppState::AddToShoppingList => {
                 self.input.push(c);
                 self.update_inline_complete_ingredients()
             }
@@ -212,7 +212,6 @@ impl App {
             AppState::EnteringDishName
             | AppState::EditingDishName
             | AppState::NewList
-            | AppState::AddToShoppingList
             | AppState::UploadEnterCode
             | AppState::UploadMenu => {
                 self.input.pop();
@@ -220,14 +219,13 @@ impl App {
 
             AppState::EnteringIngredients
             | AppState::EditingIngredient
-            | AppState::EditingAddIngredient => {
+            | AppState::EditingAddIngredient
+            | AppState::AddToShoppingList => {
                 self.input.pop();
                 self.update_inline_complete_ingredients();
             }
             _ => {}
         }
-
-        self.update_inline_complete_ingredients();
     }
 
     fn update_inline_complete_ingredients(&mut self) {
@@ -264,119 +262,41 @@ impl App {
         }
 
         match self.state {
+            // Main menu
             AppState::Normal | AppState::MovingFocus => {
-                if self.selected_space == Space::MainLeft && self.cursor == 0 {
-                    if let Some(list) = self.current_dish_list.as_ref() {
-                        if list.is_empty() {
-                            self.state = AppState::NewList;
-                            return;
-                        } else {
-                            self.state = AppState::ReplaceList;
-                            self.selected_space = Space::MainRight;
-                            self.moving_focus = false;
-
-                            return;
-                        }
+                if self.selected_space == Space::MainLeft {
+                    match self.cursor {
+                        0 => self.open_new_list(),
+                        1 => self.open_view_edit_list(),
+                        2 => self.open_add_dish_to_dishtabase(),
+                        3 => self.open_view_edit_dishtabase(),
+                        4 => self.open_upload(),
+                        _ => {}
                     }
+                    self.moving_focus = false
+                }
+            }
 
-                    self.state = AppState::NewList;
-                    self.selected_space = Space::MainRight
-                } else if self.selected_space == Space::MainLeft && self.cursor == 1 {
-                    self.state = AppState::ShowShoppingList;
-                    self.selected_space = Space::MainRight;
-                } else if self.selected_space == Space::MainLeft && self.cursor == 2 {
-                    self.state = AppState::EnteringDishName;
-                    self.selected_space = Space::MainRight
-                } else if self.selected_space == Space::MainLeft && self.cursor == 3 {
-                    db::load();
-                    self.state = AppState::ViewingDatabase;
-                    self.selected_space = Space::MainRight;
-                } else if self.selected_space == Space::MainLeft && self.cursor == 4 {
-                    match upload::does_token_exist() {
-                        Ok(true) => {
-                            self.state = AppState::UploadMenu;
-                            self.input = format!("Shopping List {}", Utc::now().date_naive());
-                        }
-                        Ok(false) => self.state = AppState::UploadFirstLogin,
-                        Err(s) => {
-                            self.state = AppState::Error;
-                            self.err_msg = Some(s)
-                        }
-                    }
-                    self.selected_space = Space::MainRight
-                }
+            // List
+            AppState::NewList => self.start_new_list(),
+            AppState::ReplaceList => self.replace_old_list(),
+            AppState::AddToGeneratedList => self.manual_add_dish_to_shoppinglist(),
+            AppState::ShowGeneratedList => self.show_and_save_generated_list(),
+            AppState::AddToShoppingList => self.add_to_shopping_list(),
+            AppState::PromptPrint => self.print_promt_confirm_options(),
+            AppState::EnteringDishName => self.confirm_dish_name(),
+            AppState::EnteringIngredients => self.confirm_ingredient(),
 
-                self.moving_focus = false
-            }
-            AppState::NewList => {
-                if self.db.dishes.is_empty() {
-                    return;
-                }
-                self.generate_list();
-                self.state = AppState::ShowGeneratedList
-            }
-            AppState::ReplaceList => {
-                if self.ays_cursor == 0 {
-                    self.current_dish_list = None;
-                    self.state = AppState::NewList
-                } else {
-                    self.state = AppState::Normal;
-                    self.selected_space = Space::MainLeft
-                }
-            }
-            AppState::AddToGeneratedList => {
-                self.manual_add_dish_to_shoppinglist();
-                self.state = self.prev_state.unwrap();
-                self.prev_state = None;
-            }
-            AppState::ShowGeneratedList => {
-                self.state = AppState::ShowShoppingList;
-
-                list::make_shopping_list(self.current_dish_list.clone(), &mut self.shopping_list);
-                list::save_list(self.current_dish_list.clone());
-                list::save_shopping_list_config(self.shopping_list.clone());
-
-                self.cursor = 1;
-            }
-            AppState::AddToShoppingList => {
-                self.add_to_shopping_list();
-            }
-            AppState::PromptPrint => {
-                if self.ays_cursor == 0 {
-                    self.text_options.0 = !self.text_options.0;
-                }
-                if self.ays_cursor == 1 {
-                    self.text_options.1 = !self.text_options.1;
-                }
-            }
-            AppState::EnteringDishName => {
-                self.confirm_dish_name();
-            }
-            AppState::EnteringIngredients => {
-                self.confirm_ingredient();
-            }
-            AppState::ViewingDatabase => {
-                if self.db.dishes.is_empty() {
-                    return;
-                }
-                self.state = AppState::EditingDish;
-            }
-            AppState::EditingDish => {
-                self.state = AppState::EditingIngredient;
-                self.pending_dish = Some(self.db.dishes[self.db_cursor.cursor].to_owned());
-            }
+            // Dishtabase
+            AppState::ViewingDatabase => self.start_editing_dish(),
+            AppState::EditingDish => self.confirm_editing_dish(),
             AppState::EditingIngredient => self.edit_ingredient(),
             AppState::EditingDishName => self.edit_dish_name(),
-            AppState::AreYouSureDelDish => {
-                if self.ays_cursor == 0 {
-                    self.delete_dish();
-                } else {
-                    self.state = AppState::ViewingDatabase
-                }
-            }
+            AppState::AreYouSureDelDish => self.delete_dish_option(),
             AppState::EditingAddIngredient => self.edit_add_ingredient(),
             AppState::PickingCategory => self.confim_category(),
 
+            // Upload
             AppState::UploadFirstLogin => self.upload_first_login(),
             AppState::UploadShowLoginUrl => self.state = AppState::UploadEnterCode,
             AppState::UploadEnterCode => self.send_code(),
@@ -387,9 +307,10 @@ impl App {
     }
 
     pub fn handle_esc(&mut self) {
-        if matches!(self.state, AppState::EditingDish)
-            || matches!(self.state, AppState::AreYouSureDelDish)
-        {
+        if matches!(
+            self.state,
+            AppState::EditingDish | AppState::AreYouSureDelDish
+        ) {
             self.db.dishes[self.db_cursor.cursor]
                 .ingredients
                 .sort_by_key(|c| c.category);
@@ -397,9 +318,10 @@ impl App {
             self.edit_cursor.cursor = 0;
             self.ays_cursor = 0;
             self.edit_cursor.scroll = 0;
-        } else if matches!(self.state, AppState::EditingIngredient)
-            || matches!(self.state, AppState::EditingDishName)
-        {
+        } else if matches!(
+            self.state,
+            AppState::EditingIngredient | AppState::EditingDishName
+        ) {
             self.state = AppState::EditingDish;
             self.pending_dish = None;
             self.input.clear();
@@ -481,6 +403,8 @@ impl App {
         if let Some(dish_list) = self.current_dish_list.as_mut() {
             dish_list.push(self.db.dishes[self.db_cursor.cursor].clone());
         }
+        self.state = self.prev_state.unwrap();
+        self.prev_state = None;
     }
 
     fn add_to_shopping_list(&mut self) {
@@ -583,7 +507,7 @@ impl App {
         }
     }
 
-    fn delete_dish(&mut self) {
+    pub fn delete_dish(&mut self) {
         if self.db.dishes.is_empty() {
             return;
         }

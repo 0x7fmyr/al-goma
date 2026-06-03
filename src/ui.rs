@@ -1,8 +1,11 @@
 use crate::{
     app::{App, AppState, Space},
-    items,
+    db, items,
     locale::UiText,
+    upload,
 };
+
+use chrono::Utc;
 
 #[derive(Debug, PartialEq, PartialOrd, Clone, Copy)]
 pub struct Cursor {
@@ -12,6 +15,58 @@ pub struct Cursor {
 }
 
 impl App {
+    // Main menu open
+    pub fn open_new_list(&mut self) {
+        if let Some(list) = self.current_dish_list.as_ref() {
+            if list.is_empty() {
+                self.state = AppState::NewList;
+                return;
+            } else {
+                self.state = AppState::ReplaceList;
+                self.selected_space = Space::MainRight;
+                self.moving_focus = false;
+
+                return;
+            }
+        }
+        self.state = AppState::NewList;
+        self.selected_space = Space::MainRight
+    }
+
+    pub fn open_view_edit_list(&mut self) {
+        self.state = AppState::ShowShoppingList;
+        self.selected_space = Space::MainRight;
+    }
+
+    pub fn open_add_dish_to_dishtabase(&mut self) {
+        self.state = AppState::EnteringDishName;
+        self.selected_space = Space::MainRight
+    }
+
+    pub fn open_view_edit_dishtabase(&mut self) {
+        db::load();
+        self.state = AppState::ViewingDatabase;
+        self.selected_space = Space::MainRight;
+    }
+
+    pub fn open_upload(&mut self) {
+        match upload::does_token_exist() {
+            Ok(true) => {
+                self.state = AppState::UploadMenu;
+                self.input = format!("Shopping List {}", Utc::now().date_naive());
+            }
+            Ok(false) => self.state = AppState::UploadFirstLogin,
+            Err(s) => {
+                self.state = AppState::Error;
+                self.err_msg = Some(s)
+            }
+        }
+        self.selected_space = Space::MainRight
+    }
+
+    
+
+    // Focus
     pub fn move_focus_left(&mut self) {
         if self.state == AppState::AreYouSureDelDish || self.state == AppState::ReplaceList {
             self.move_cursor_up();

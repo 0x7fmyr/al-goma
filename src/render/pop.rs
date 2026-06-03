@@ -8,8 +8,17 @@ use ratatui::{Frame, layout::Rect};
 
 use crate::app::{self, AppState};
 use crate::locale::UiText;
+use crate::render::main_window;
 
-pub fn are_you_sure(window: &mut Frame, rect: Rect, app: &mut app::App, msg: Vec<Line>) {
+pub fn are_you_sure(
+    window: &mut Frame,
+    rect: Rect,
+    app: &mut app::App,
+    msg: Vec<Line>,
+    size: (u16, u16),
+) {
+    let popup = main_window::center_rect(rect, size.0, size.1);
+
     let del_window = Layout::default()
         .direction(Direction::Vertical)
         .constraints([
@@ -17,7 +26,7 @@ pub fn are_you_sure(window: &mut Frame, rect: Rect, app: &mut app::App, msg: Vec
             Constraint::Length(4),
             Constraint::Fill(1),
         ])
-        .split(rect.inner(Margin {
+        .split(popup.inner(Margin {
             horizontal: 5,
             vertical: 1,
         }));
@@ -30,6 +39,8 @@ pub fn are_you_sure(window: &mut Frame, rect: Rect, app: &mut app::App, msg: Vec
             Constraint::Fill(1),
         ])
         .split(del_window[2]);
+
+    window.render_widget(Clear, popup);
 
     window.render_widget(
         Paragraph::new(msg).alignment(Alignment::Center),
@@ -81,7 +92,7 @@ pub fn are_you_sure(window: &mut Frame, rect: Rect, app: &mut app::App, msg: Vec
                 .borders(Borders::ALL)
                 .title_alignment(Alignment::Center),
         ),
-        rect,
+        popup,
     );
 }
 
@@ -142,10 +153,17 @@ pub fn err_pop_up(window: &mut Frame, rect: Rect, msg: String) {
     );
 }
 
-pub fn add_to_generated_list(window: &mut Frame, rect: Rect, app: &mut app::App) {
+pub fn add_to_generated_list(
+    window: &mut Frame,
+    rect: Rect,
+    app: &mut app::App,
+    size_h_w: (u16, u16),
+) {
+    let center_rect = main_window::center_rect(rect, size_h_w.0, size_h_w.1);
+
     let popup = Layout::default()
         .constraints([Constraint::Fill(1)])
-        .split(rect);
+        .split(center_rect);
 
     let inner_window = Layout::default()
         .constraints([Constraint::Fill(1)])
@@ -198,6 +216,8 @@ pub fn add_to_generated_list(window: &mut Frame, rect: Rect, app: &mut app::App)
         name.clear();
     }
 
+    window.render_widget(Clear, center_rect);
+
     window.render_widget(
         Paragraph::default().block(
             Block::bordered()
@@ -225,11 +245,16 @@ pub fn pick_category(
     app: &mut app::App,
     s: AppState,
     name: String,
+    size_h_w: (u16, u16),
 ) {
+    let center_rect = main_window::center_rect(rect, size_h_w.0, size_h_w.1);
+
+    window.render_widget(Clear, center_rect);
+
     let pick_window = Layout::default()
         .direction(Direction::Vertical)
         .constraints([Constraint::Length(4), Constraint::Fill(1)])
-        .split(rect.inner(Margin {
+        .split(center_rect.inner(Margin {
             horizontal: 5,
             vertical: 1,
         }));
@@ -255,6 +280,7 @@ pub fn pick_category(
             )
             .add_modifier(Modifier::BOLD),
         ];
+
         window.render_widget(
             Paragraph::new(msg).alignment(Alignment::Center),
             pick_window[0],
@@ -300,11 +326,28 @@ pub fn pick_category(
                 .borders(Borders::ALL)
                 .title_alignment(Alignment::Center),
         ),
-        rect,
+        center_rect,
     );
 }
 
 pub fn input_box(window: &mut Frame, rect: Rect, app: &mut app::App, title_msg: String) {
+    let v = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints([
+            Constraint::Fill(1),
+            Constraint::Length(3),
+            Constraint::Length(2),
+        ])
+        .split(rect);
+    let h = Layout::default()
+        .direction(Direction::Horizontal)
+        .constraints([
+            Constraint::Length(10),
+            Constraint::Fill(1),
+            Constraint::Length(10),
+        ])
+        .split(v[1]);
+
     let mut inline: String = "".to_string();
     let mut cursor = Span::styled(
         "_",
@@ -341,6 +384,8 @@ pub fn input_box(window: &mut Frame, rect: Rect, app: &mut app::App, title_msg: 
         Span::styled(inline, Style::new().fg(Color::DarkGray)),
     ];
 
+    window.render_widget(Clear, h[1]);
+
     window.render_widget(
         Paragraph::new(Line::from(input))
             .alignment(Alignment::Left)
@@ -352,11 +397,15 @@ pub fn input_box(window: &mut Frame, rect: Rect, app: &mut app::App, title_msg: 
                     .title(title_msg)
                     .title_alignment(Alignment::Center),
             ),
-        rect,
+        h[1],
     );
 }
 
-pub fn print_txt_options(window: &mut Frame, rect: Rect, app: &mut app::App) {
+pub fn print_txt_options(window: &mut Frame, rect: Rect, app: &mut app::App, size_h_w: (u16, u16)) {
+    let popup = main_window::center_rect(rect, size_h_w.0, size_h_w.1);
+
+    window.render_widget(Clear, popup);
+
     let option_window = Layout::default()
         .direction(Direction::Vertical)
         .constraints([
@@ -364,7 +413,7 @@ pub fn print_txt_options(window: &mut Frame, rect: Rect, app: &mut app::App) {
             Constraint::Fill(1),
             Constraint::Fill(1),
         ])
-        .split(rect);
+        .split(popup);
 
     let text = Layout::default()
         .direction(Direction::Vertical)
@@ -389,7 +438,7 @@ pub fn print_txt_options(window: &mut Frame, rect: Rect, app: &mut app::App) {
                 .title(app.text_get(UiText::WriteTxt))
                 .title_alignment(Alignment::Center),
         ),
-        rect,
+        popup,
     );
 
     window.render_widget(

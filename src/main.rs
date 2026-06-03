@@ -208,7 +208,7 @@ fn run(
                     modifiers: KeyModifiers::CONTROL,
                     ..
                 } => {
-                    if matches!(app.state, AppState::ViewingDatabase) {
+                    if app.state == AppState::ViewingDatabase {
                         app.state = app::AppState::EditingDishName;
                         app.pending_dish = Some(app.db.dishes[app.db_cursor.cursor].to_owned());
                         app.input = app.pending_dish.as_ref().unwrap().name.clone();
@@ -268,7 +268,7 @@ fn run(
                     KeyCode::Left => app.move_focus_left(),
                     KeyCode::Right => app.move_focus_right(),
                     KeyCode::Char('p') => {
-                        if matches!(app.state, AppState::PromptPrint) {
+                        if app.state == AppState::PromptPrint {
                             app.print_shopping_list_txt_file(
                                 app.shopping_list.clone(),
                                 app.text_options.0,
@@ -287,7 +287,7 @@ fn run(
                         }
                     }
                     KeyCode::Char('c') => {
-                        if matches!(app.state, AppState::UploadShowLoginUrl) {
+                        if app.state == AppState::UploadShowLoginUrl {
                             app::copy_to_clipboard(app.login_url.clone().unwrap()).ok();
                         } else {
                             app.char_input('c');

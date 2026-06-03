@@ -2,20 +2,25 @@ use ratatui::layout::{Alignment, Constraint, Layout, Margin};
 use ratatui::prelude::Direction;
 use ratatui::style::{Color, Modifier, Style, Stylize};
 use ratatui::text::{Line, Span};
-use ratatui::widgets::{Block, BorderType::Rounded, Borders, Paragraph};
-use ratatui::widgets::{Scrollbar, ScrollbarOrientation, ScrollbarState};
+use ratatui::widgets::{
+    Block, BorderType::Rounded, Borders, Clear, Paragraph, Scrollbar, ScrollbarOrientation,
+    ScrollbarState,
+};
 use ratatui::{Frame, layout::Rect};
 
 use crate::AppState;
 use crate::app;
 use crate::items::Category;
 use crate::locale::UiText;
+use crate::render::main_window;
 
-pub fn new_list(window: &mut Frame, rect: Rect, app: &mut app::App) {
+pub fn new_list(window: &mut Frame, rect: Rect, app: &mut app::App, size_h_w: (u16, u16)) {
+    let popup = main_window::center_rect(rect, size_h_w.0, size_h_w.1);
+
     let chose_window = Layout::default()
         .direction(Direction::Vertical)
         .constraints([Constraint::Length(3), Constraint::Fill(1)])
-        .split(rect.inner(Margin {
+        .split(popup.inner(Margin {
             horizontal: 6,
             vertical: 2,
         }));
@@ -42,6 +47,8 @@ pub fn new_list(window: &mut Frame, rect: Rect, app: &mut app::App) {
             );
         }
     }
+
+    window.render_widget(Clear, popup);
 
     window.render_widget(
         Paragraph::new(msg).alignment(Alignment::Center),
@@ -80,16 +87,23 @@ pub fn new_list(window: &mut Frame, rect: Rect, app: &mut app::App) {
                 .borders(Borders::ALL)
                 .title_alignment(Alignment::Center),
         ),
-        rect,
+        popup,
     );
 }
 
-pub fn show_generated_list(window: &mut Frame, rect: Rect, app: &mut app::App) {
+pub fn show_generated_list(
+    window: &mut Frame,
+    rect: Rect,
+    app: &mut app::App,
+    size_h_w: (u16, u16),
+) {
     let vertical_scroll = app.edit_cursor.scroll;
+
+    let popup = main_window::center_rect(rect, size_h_w.0, size_h_w.1);
 
     let edit_window = Layout::default()
         .constraints([Constraint::Fill(1)])
-        .split(rect.inner(Margin {
+        .split(popup.inner(Margin {
             horizontal: 2,
             vertical: 2,
         }));
@@ -100,6 +114,8 @@ pub fn show_generated_list(window: &mut Frame, rect: Rect, app: &mut app::App) {
             horizontal: 1,
             vertical: 1,
         }));
+
+    window.render_widget(Clear, popup);
 
     window.render_widget(
         Paragraph::default().alignment(Alignment::Left).block(
@@ -205,7 +221,7 @@ pub fn show_generated_list(window: &mut Frame, rect: Rect, app: &mut app::App) {
 
     window.render_stateful_widget(
         scrollbar,
-        rect.inner(Margin {
+        popup.inner(Margin {
             // using an inner vertical margin of 1 unit makes the scrollbar inside the block
             vertical: 0,
             horizontal: 0,
@@ -227,7 +243,7 @@ pub fn show_generated_list(window: &mut Frame, rect: Rect, app: &mut app::App) {
                 .title(app.text_get(UiText::GeneratedList))
                 .title_alignment(Alignment::Center),
         ),
-        rect,
+        popup,
     );
 }
 
