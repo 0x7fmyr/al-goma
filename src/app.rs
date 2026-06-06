@@ -9,8 +9,8 @@ use arboard::Clipboard;
 use chrono::Utc;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use std::fs;
 use std::path::PathBuf;
+use std::{char, fs};
 use tokio::sync::mpsc;
 
 #[derive(Debug, PartialEq)]
@@ -90,6 +90,7 @@ pub struct App {
     pub input: String,
     pub inline_complete: Option<String>,
     pub inline_complete_whole_word: Option<String>,
+    pub default_upload_name: bool,
 
     pub pending_dish: Option<Dish>,
     pub category_db: HashMap<String, Category>,
@@ -169,6 +170,7 @@ impl App {
             state: AppState::Normal,
             prev_state: None,
             input: String::new(),
+            default_upload_name: true,
             inline_complete: None,
             inline_complete_whole_word: None,
             pending_dish: None,
@@ -192,8 +194,7 @@ impl App {
             AppState::EnteringDishName
             | AppState::EditingDishName
             | AppState::NewList
-            | AppState::UploadEnterCode
-            | AppState::UploadMenu => self.input.push(c),
+            | AppState::UploadEnterCode => self.input.push(c),
 
             AppState::EnteringIngredients
             | AppState::EditingIngredient
@@ -202,29 +203,67 @@ impl App {
                 self.input.push(c);
                 self.update_inline_complete_ingredients()
             }
+            AppState::UploadMenu => {
+                self.clear_and_push_input_upload(c);
+            }
 
             _ => {}
         }
     }
 
-    pub fn backspace(&mut self) {
+    fn clear_and_push_input_upload(&mut self, c: char) {
+        if self.default_upload_name == true {
+            self.default_upload_name = false;
+            self.input.clear();
+            self.input.push(c);
+        } else {
+            self.input.push(c);
+        }
+    }
+
+    pub fn backspace(&mut self, ctrl: bool) {
         match self.state {
             AppState::EnteringDishName
             | AppState::EditingDishName
             | AppState::NewList
             | AppState::UploadEnterCode
             | AppState::UploadMenu => {
-                self.input.pop();
+                if ctrl == false {
+                    self.input.pop();
+                } else {
+                    self.backspace_to_delimiter_or_whitespace()
+                }
             }
 
             AppState::EnteringIngredients
             | AppState::EditingIngredient
             | AppState::EditingAddIngredient
             | AppState::AddToShoppingList => {
-                self.input.pop();
-                self.update_inline_complete_ingredients();
+                if ctrl == false {
+                    self.input.pop();
+                    self.update_inline_complete_ingredients();
+                } else {
+                    self.backspace_to_delimiter_or_whitespace();
+                    self.update_inline_complete_ingredients()
+                }
             }
             _ => {}
+        }
+    }
+
+    fn backspace_to_delimiter_or_whitespace(&mut self) {
+        if let Some(c) = self.input.chars().rev().next() {
+            if c.is_whitespace() || c == '.' || c == '-' || c == '_' {
+                self.input.pop();
+            } else {
+                match self
+                    .input
+                    .rfind(|c: char| c.is_whitespace() || c == '.' || c == '-' || c == '_')
+                {
+                    Some(i) => self.input.truncate(i + 1),
+                    None => self.input.clear(),
+                }
+            }
         }
     }
 
@@ -264,6 +303,7 @@ impl App {
         match self.state {
             // Main menu
             AppState::Normal | AppState::MovingFocus => {
+                self.input.clear();
                 if self.selected_space == Space::MainLeft {
                     match self.cursor {
                         0 => self.open_new_list(),
@@ -273,7 +313,7 @@ impl App {
                         4 => self.open_upload(),
                         _ => {}
                     }
-                    self.moving_focus = false
+                    self.moving_focus = false;
                 }
             }
 
@@ -307,48 +347,49 @@ impl App {
     }
 
     pub fn handle_esc(&mut self) {
-        if matches!(
-            self.state,
-            AppState::EditingDish | AppState::AreYouSureDelDish
-        ) {
-            self.db.dishes[self.db_cursor.cursor]
-                .ingredients
-                .sort_by_key(|c| c.category);
-            self.state = AppState::ViewingDatabase;
-            self.edit_cursor.cursor = 0;
-            self.ays_cursor = 0;
-            self.edit_cursor.scroll = 0;
-        } else if matches!(
-            self.state,
-            AppState::EditingIngredient | AppState::EditingDishName
-        ) {
-            self.state = AppState::EditingDish;
-            self.pending_dish = None;
-            self.input.clear();
-        } else if matches!(self.state, AppState::PickingCategory) {
-            if let Some(prev_state) = self.prev_state {
-                self.state = prev_state;
-                self.prev_state = None
-            } else {
-                self.state = AppState::Normal;
+        match self.state {
+            AppState::EditingDish | AppState::AreYouSureDelDish => {
+                self.db.dishes[self.db_cursor.cursor]
+                    .ingredients
+                    .sort_by_key(|c| c.category);
+                self.state = AppState::ViewingDatabase;
+                self.edit_cursor.cursor = 0;
+                self.ays_cursor = 0;
+                self.edit_cursor.scroll = 0;
             }
-        } else if matches!(self.state, AppState::AddToShoppingList) {
-            self.state = AppState::ShowShoppingList;
-            self.input.clear();
-        } else if matches!(self.state, AppState::AddToGeneratedList) {
-            self.state = self.prev_state.unwrap();
-            self.prev_state = None;
-            self.db_cursor.cursor = 0;
-        } else {
-            self.state = AppState::Normal;
-            self.selected_space = Space::MainLeft;
+            AppState::EditingIngredient | AppState::EditingDishName => {
+                self.state = AppState::EditingDish;
+                self.pending_dish = None;
+                self.input.clear();
+            }
+            AppState::PickingCategory => {
+                if let Some(prev_state) = self.prev_state {
+                    self.state = prev_state;
+                    self.prev_state = None
+                } else {
+                    self.state = AppState::Normal
+                }
+            }
+            AppState::AddToShoppingList => {
+                self.state = AppState::ShowShoppingList;
+                self.input.clear();
+            }
+            AppState::AddToGeneratedList => {
+                self.state = self.prev_state.unwrap();
+                self.prev_state = None;
+                self.db_cursor.cursor = 0;
+            }
+            _ => {
+                self.state = AppState::Normal;
+                self.selected_space = Space::MainLeft;
 
-            self.pending_dish = None;
+                self.pending_dish = None;
 
-            self.input.clear();
-            self.cursor = 0;
-            self.db_cursor.cursor = 0;
-            self.edit_cursor.cursor = 0;
+                self.input.clear();
+                self.cursor = 0;
+                self.db_cursor.cursor = 0;
+                self.edit_cursor.cursor = 0;
+            }
         }
     }
 

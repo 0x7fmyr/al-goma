@@ -190,7 +190,7 @@ fn run(
             && let Event::Key(key) = event::read()?
         {
             match key {
-                //mod presses
+                // Mod Presses
                 KeyEvent {
                     code: KeyCode::Char('s'),
                     modifiers: KeyModifiers::CONTROL,
@@ -248,7 +248,22 @@ fn run(
                         app.state = AppState::PromptPrint
                     }
                 }
-                //plain keypresses
+                KeyEvent {
+                    code: KeyCode::Backspace,
+                    modifiers: KeyModifiers::CONTROL,
+                    ..
+                } => {
+                    app.backspace(true);
+                }
+                KeyEvent {
+                    code: KeyCode::Char('h'),
+                    modifiers: KeyModifiers::CONTROL,
+                    ..
+                } => {
+                    app.backspace(true);
+                }
+
+                // Plain Keypresses
                 KeyEvent { code, .. } => match code {
                     KeyCode::Char('q') => match app.state {
                         AppState::EnteringDishName
@@ -296,7 +311,7 @@ fn run(
 
                     KeyCode::Char(ch) => app.char_input(ch),
 
-                    KeyCode::Backspace => app.backspace(),
+                    KeyCode::Backspace => app.backspace(false),
                     KeyCode::Delete => app.handle_delete(),
                     KeyCode::Enter => app.handle_enter(),
                     KeyCode::Tab => app.handle_tab(),

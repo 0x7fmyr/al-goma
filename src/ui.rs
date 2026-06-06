@@ -54,6 +54,7 @@ impl App {
             Ok(true) => {
                 self.state = AppState::UploadMenu;
                 self.input = format!("Shopping List {}", Utc::now().date_naive());
+                self.default_upload_name = true;
             }
             Ok(false) => self.state = AppState::UploadFirstLogin,
             Err(s) => {
@@ -63,8 +64,6 @@ impl App {
         }
         self.selected_space = Space::MainRight
     }
-
-    
 
     // Focus
     pub fn move_focus_left(&mut self) {

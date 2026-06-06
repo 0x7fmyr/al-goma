@@ -1,18 +1,20 @@
-use ratatui::layout::{Alignment, Constraint, Layout, Margin};
-use ratatui::prelude::Direction;
-use ratatui::style::{Color, Modifier, Style, Stylize};
-use ratatui::text::{Line, Span};
-use ratatui::widgets::Clear;
-use ratatui::widgets::{Block, BorderType::Rounded, Borders, Paragraph};
-use ratatui::{Frame, layout::Rect};
+use ratatui::{
+    Frame,
+    layout::Rect,
+    layout::{Alignment, Constraint, Layout, Margin},
+    prelude::Direction,
+    style::{Color, Modifier, Style, Stylize},
+    text::{Line, Span},
+    widgets::{Block, BorderType::Rounded, Borders, Paragraph},
+};
 
-use super::db;
-use super::pop;
-use super::render_upload;
+use super::{render_db, pop, render_upload};
 
-use crate::app::{self, AppState, Space};
-use crate::locale::UiText;
-use crate::render::{self, new_list};
+use crate::{
+    app::{self, AppState, Space},
+    locale::UiText,
+    render::{self, new_list},
+};
 
 pub fn left(window: &mut Frame, rect: Rect, app: &mut app::App) {
     window.render_widget(
@@ -58,11 +60,7 @@ pub fn left(window: &mut Frame, rect: Rect, app: &mut app::App) {
 }
 
 pub fn right(window: &mut Frame, rect: Rect, app: &mut app::App) {
-    let mut prev_state = AppState::Normal;
-
-    if let Some(state) = app.prev_state {
-        prev_state = state
-    }
+    let prev_state = app.prev_state.unwrap_or(AppState::Normal);
 
     //ToolTips
 
@@ -94,7 +92,7 @@ pub fn right(window: &mut Frame, rect: Rect, app: &mut app::App) {
 
     //New List
 
-    if matches!(app.state, AppState::NewList) || matches!(app.state, AppState::ReplaceList) {
+    if matches!(app.state, AppState::NewList | AppState::ReplaceList) {
         if matches!(app.state, AppState::ReplaceList) {
             let msg = vec![
                 Line::from(app.text_get(UiText::GeneratingReplaceOld1)),
@@ -108,9 +106,10 @@ pub fn right(window: &mut Frame, rect: Rect, app: &mut app::App) {
         }
     }
 
-    if matches!(app.state, AppState::ShowGeneratedList)
-        || matches!(app.state, AppState::AddToGeneratedList)
-    {
+    if matches!(
+        app.state,
+        AppState::ShowGeneratedList | AppState::AddToGeneratedList
+    ) {
         render::new_list::show_generated_list(window, rect, app, (20, 40));
 
         if matches!(app.state, AppState::AddToGeneratedList) {
@@ -120,11 +119,10 @@ pub fn right(window: &mut Frame, rect: Rect, app: &mut app::App) {
 
     //View/Edit List
 
-    if matches!(app.state, AppState::ShowShoppingList)
-        || matches!(app.state, AppState::AddToShoppingList)
-        || (matches!(app.state, AppState::PickingCategory)
-            && prev_state == AppState::AddToShoppingList)
-        || matches!(app.state, AppState::PromptPrint)
+    if matches!(
+        app.state,
+        AppState::ShowShoppingList | AppState::AddToShoppingList | AppState::PromptPrint
+    ) || app.state == AppState::PickingCategory && prev_state == AppState::AddToShoppingList
     {
         new_list::show_generated_list_ingredients(window, rect, app);
 
@@ -140,37 +138,41 @@ pub fn right(window: &mut Frame, rect: Rect, app: &mut app::App) {
 
     //Add Dish to Dishtabase
 
-    if matches!(app.state, AppState::EnteringDishName)
-        || matches!(app.state, AppState::EnteringIngredients)
-        || (matches!(app.state, AppState::PickingCategory)
-            && prev_state == AppState::EnteringIngredients)
+    if matches!(
+        app.state,
+        AppState::EnteringDishName | AppState::EnteringIngredients
+    ) || app.state == AppState::PickingCategory && prev_state == AppState::EnteringIngredients
     {
-        db::add_dish(window, rect, app, prev_state);
+        render_db::add_dish(window, rect, app, prev_state);
     }
 
     //View/Edit Dishtabase
 
-    if matches!(app.state, AppState::ViewingDatabase)
-        || matches!(app.state, AppState::EditingDish)
-        || matches!(app.state, AppState::EditingIngredient)
-        || matches!(app.state, AppState::EditingDishName)
-        || matches!(app.state, AppState::AreYouSureDelDish)
-        || matches!(app.state, AppState::EditingAddIngredient)
-        || (matches!(app.state, AppState::PickingCategory) && prev_state == AppState::EditingDish)
+    if matches!(
+        app.state,
+        AppState::ViewingDatabase
+            | AppState::EditingDish
+            | AppState::EditingIngredient
+            | AppState::EditingDishName
+            | AppState::AreYouSureDelDish
+            | AppState::EditingAddIngredient
+    ) || app.state == AppState::PickingCategory && prev_state == AppState::EditingDish
     {
-        db::dish_database(window, rect, app);
+        render_db::dish_database(window, rect, app);
 
-        if matches!(app.state, AppState::EditingDish)
-            || matches!(app.state, AppState::EditingIngredient)
-            || matches!(app.state, AppState::EditingDishName)
-            || matches!(app.state, AppState::EditingAddIngredient)
-            || matches!(app.state, AppState::PickingCategory)
-        {
+        if matches!(
+            app.state,
+            AppState::EditingDish
+                | AppState::EditingIngredient
+                | AppState::EditingDishName
+                | AppState::EditingAddIngredient
+                | AppState::PickingCategory
+        ) {
             if rect.height > 12 {
-                db::edit_widow(window, rect, app, ((rect.height * 4) / 6, 45));
+                render_db::edit_widow(window, rect, app, ((rect.height * 4) / 6, 45));
             }
 
-            if matches!(app.state, AppState::PickingCategory) {
+            if app.state == AppState::PickingCategory {
                 pop::pick_category(
                     window,
                     rect,
@@ -189,7 +191,7 @@ pub fn right(window: &mut Frame, rect: Rect, app: &mut app::App) {
             }
         }
 
-        if matches!(app.state, AppState::AreYouSureDelDish) {
+        if app.state == AppState::AreYouSureDelDish {
             let deleting_name = app.db.dishes[app.db_cursor.cursor].name.clone();
             let msg = vec![
                 Line::from(format!(
@@ -205,28 +207,32 @@ pub fn right(window: &mut Frame, rect: Rect, app: &mut app::App) {
         }
     }
 
-    if matches!(app.state, AppState::EnteringDishName)
-        || matches!(app.state, AppState::EditingDishName)
-    {
+    if matches!(
+        app.state,
+        AppState::EnteringDishName | AppState::EditingDishName
+    ) {
         pop::input_box(window, rect, app, app.text_get(UiText::PPEnterDishName));
     }
 
-    if matches!(app.state, AppState::EnteringIngredients)
-        || matches!(app.state, AppState::EditingIngredient)
-        || matches!(app.state, AppState::EditingAddIngredient)
-        || matches!(app.state, AppState::AddToShoppingList)
-    {
+    if matches!(
+        app.state,
+        AppState::EnteringIngredients
+            | AppState::EditingIngredient
+            | AppState::EditingAddIngredient
+            | AppState::AddToShoppingList
+    ) {
         pop::input_box(window, rect, app, app.text_get(UiText::PPEnterIngredient));
     }
 
-    if matches!(app.state, AppState::UploadFirstLogin)
-        || matches!(app.state, AppState::UploadWaitingForLoginUrl)
-        || matches!(app.state, AppState::UploadLogginginWait)
-    {
+    if matches!(
+        app.state,
+        AppState::UploadFirstLogin
+            | AppState::UploadWaitingForLoginUrl
+            | AppState::UploadLogginginWait
+    ) {
         let mut msg: Vec<Line> = Vec::from([Line::from("n/a")]);
 
-        if matches!(app.state, AppState::UploadFirstLogin) {
-            //fix this
+        if app.state == AppState::UploadFirstLogin {
             msg = Vec::from([
                 Line::from(Span::styled(
                     app.text_get(UiText::UPFirstLogin1),
@@ -239,13 +245,14 @@ pub fn right(window: &mut Frame, rect: Rect, app: &mut app::App) {
                 Line::from(app.text_get(UiText::UPFirstLogin4)),
             ]);
         }
-        if matches!(app.state, AppState::UploadWaitingForLoginUrl) {
+
+        if app.state == AppState::UploadWaitingForLoginUrl {
             msg = Vec::from([Line::from(Span::styled(
                 app.text_get(UiText::UPWaiting4Url),
                 Style::new().add_modifier(Modifier::BOLD),
             ))]);
         }
-        if matches!(app.state, AppState::UploadLogginginWait) {
+        if app.state == AppState::UploadLogginginWait {
             msg = Vec::from([Line::from(Span::styled(
                 app.text_get(UiText::UPWaiting4Google),
                 Style::new().add_modifier(Modifier::BOLD),
@@ -256,16 +263,16 @@ pub fn right(window: &mut Frame, rect: Rect, app: &mut app::App) {
 
     // Upload
 
-    if matches!(app.state, AppState::UploadMenu)
-        || matches!(app.state, AppState::Uploading)
-        || matches!(app.state, AppState::UploadDone)
-    {
+    if matches!(
+        app.state,
+        AppState::UploadMenu | AppState::Uploading | AppState::UploadDone
+    ) {
         render_upload::upload_menu(window, rect, app);
     }
 
     // Error Popup
 
-    if matches!(app.state, AppState::Error) {
+    if app.state == AppState::Error {
         let error_msg = app.err_msg.clone().unwrap();
         pop::err_pop_up(window, rect, error_msg);
     }
