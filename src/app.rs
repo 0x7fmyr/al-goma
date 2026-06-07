@@ -5,7 +5,10 @@ use crate::upload::UploadProgress;
 use crate::{db, items::Ingredient};
 use crate::{list, locale};
 use crate::{ui, upload};
+
+#[cfg(feature = "clipboard")]
 use arboard::Clipboard;
+
 use chrono::Utc;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -880,17 +883,27 @@ fn load_settings() -> Settings {
 
     settings_load
 }
-
+#[cfg(feature = "clipboard")]
 pub fn copy_to_clipboard(input: String) -> Result<(), String> {
     match Clipboard::new().unwrap().set_text(input) {
         Ok(_) => Ok(()),
         Err(e) => Err(e.to_string()),
     }
 }
+#[cfg(not(feature = "clipboard"))]
+pub fn copy_to_clipboard(input: String) -> Result<(), String> {
+    Err("clipboard not supported on this platform".to_string())
+}
 
+#[cfg(feature = "clipboard")]
 pub fn paste_from_clipboard() -> Result<String, String> {
     match Clipboard::new().unwrap().get_text() {
         Ok(s) => Ok(s),
         Err(e) => Err(e.to_string()),
     }
+}
+
+#[cfg(not(feature = "clipboard"))]
+pub fn paste_from_clipboard() -> Result<String, String> {
+    Err("clipboard not supported on this platform".to_string())
 }
