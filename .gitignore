@@ -13,3 +13,5 @@ demo.tape
 demo.gif
 secrets.txt
 cl-res.sh
+
+oauth/clientsecret.json

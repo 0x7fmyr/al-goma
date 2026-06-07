@@ -8,6 +8,8 @@ use yup_oauth2::{InstalledFlowAuthenticator, authenticator_delegate::InstalledFl
 use crate::app::{App, AppState};
 use crate::items::Ingredient;
 
+const CLIENT_SECRET: &str = include_str!("../oauth/clientsecret.json");
+
 pub struct AlgomaFlowDelegate {
     url_sender: Sender<String>,
     code_receiver: tokio::sync::Mutex<Receiver<String>>,
@@ -142,18 +144,11 @@ pub async fn login(
     url_sender: mpsc::Sender<String>,
     code_receiver: mpsc::Receiver<String>,
 ) -> Result<(), String> {
-    let secret_path = dirs::data_dir()
-        .expect("failed to find data path...")
-        .join("al-goma/clientsecret.json");
-
     let token_path = dirs::data_dir()
         .expect("failed to find data path...")
         .join("al-goma/tokencache.json");
-
-    let secret = match yup_oauth2::read_application_secret(secret_path).await {
-        Ok(s) => s,
-        Err(e) => return Err(format!("{}", e)),
-    };
+    let secret =
+        yup_oauth2::parse_application_secret(CLIENT_SECRET).map_err(|e| format!("{}", e))?;
 
     let login = match InstalledFlowAuthenticator::builder(
         secret,
@@ -184,18 +179,12 @@ pub async fn upload(
     input: String,
     progress_sender: Sender<UploadProgress>,
 ) -> Result<(), String> {
-    let secret_path = dirs::data_dir()
-        .expect("failed to find data path...")
-        .join("al-goma/clientsecret.json");
-
     let token_path = dirs::data_dir()
         .expect("failed to find data path...")
         .join("al-goma/tokencache.json");
 
-    let secret = match yup_oauth2::read_application_secret(secret_path).await {
-        Ok(s) => s,
-        Err(e) => return Err(format!("{}", e)),
-    };
+    let secret =
+        yup_oauth2::parse_application_secret(CLIENT_SECRET).map_err(|e| format!("{}", e))?;
 
     let login = match InstalledFlowAuthenticator::builder(
         secret,
