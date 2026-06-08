@@ -17,21 +17,36 @@ use std::{error::Error, io::stdout};
 use crate::{app::AppState, lists::upload::UploadProgress};
 mod app;
 mod dishtabase;
-mod lists;
-
 mod interface;
+mod lists;
+mod options;
 mod render;
 
 #[derive(Parser)]
 struct Args {
     #[arg(long)]
-    setup: bool,
+    upload_setup: bool,
 }
 
 fn main() -> Result<(), Box<dyn Error>> {
     let args = Args::parse();
-    if args.setup {
-        //setup::run_setup();
+    if args.upload_setup {
+        if options::setup::run_upload_setup() {
+            // Tui set up
+            enable_raw_mode()?;
+            std::io::stdout().execute(EnterAlternateScreen)?;
+            let backend = CrosstermBackend::new(stdout());
+            let mut terminal = Terminal::new(backend)?;
+
+            let mut app = app::App::init();
+            app.open_upload();
+            let result = run(&mut terminal, &mut app);
+
+            //Tui clean up
+            disable_raw_mode()?;
+            std::io::stdout().execute(LeaveAlternateScreen)?;
+            return result;
+        }
         return Ok(());
     }
 

@@ -137,6 +137,11 @@ impl App {
             lists::list::load()
         };
 
+        // Create .config/al-goma/oauth
+        if let Some(config_path) = dirs::config_dir() {
+            fs::create_dir_all(config_path.join("al-goma/oauth")).ok();
+        }
+
         App {
             current_dish_list: load_current_dish_list,
             shopping_list: load_shopping_list,

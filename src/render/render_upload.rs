@@ -63,7 +63,7 @@ pub fn show_login_url(window: &mut Frame, rect: Rect, app: &mut app::App) {
         .constraints([
             Constraint::Length(2),
             Constraint::Fill(1),
-            Constraint::Length(3),
+            Constraint::Length(5),
             Constraint::Fill(1),
             Constraint::Length(1),
         ])
