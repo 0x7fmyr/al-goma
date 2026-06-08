@@ -1,10 +1,10 @@
-use crate::items::{self, Category, Database, Dish};
-use crate::locale::UiText;
-use crate::ui::Cursor;
-use crate::upload::UploadProgress;
-use crate::{db, items::Ingredient};
-use crate::{list, locale};
-use crate::{ui, upload};
+use crate::dishtabase::{
+    db,
+    items::{self, Category, Database, Dish, Ingredient},
+};
+use crate::interface::{locale::UiText, ui::Cursor};
+use crate::lists::upload::UploadProgress;
+use crate::{interface::locale, interface::ui, lists};
 
 #[cfg(feature = "clipboard")]
 use arboard::Clipboard;
@@ -105,11 +105,11 @@ pub struct App {
     pub url_receiver: Option<mpsc::Receiver<String>>,
     pub code_sender: Option<mpsc::Sender<String>>,
     pub login_result_receiver: Option<mpsc::Receiver<Result<(), String>>>,
-    pub progress_checker_receiver: Option<mpsc::Receiver<upload::UploadProgress>>,
+    pub progress_checker_receiver: Option<mpsc::Receiver<UploadProgress>>,
     pub upload_result_receiver: Option<mpsc::Receiver<Result<(), String>>>,
 
     pub login_url: Option<String>,
-    pub progress: upload::UploadProgress,
+    pub progress: UploadProgress,
 }
 
 impl App {
@@ -129,12 +129,12 @@ impl App {
 
         let ingredient_category_db = items::build_ingredient_database();
 
-        let load_shopping_list = list::load_shopping_list_config();
+        let load_shopping_list = lists::list::load_shopping_list_config();
 
         let load_current_dish_list: Option<Vec<Dish>> = if load_shopping_list.is_empty() {
             None
         } else {
-            list::load()
+            lists::list::load()
         };
 
         App {
@@ -484,7 +484,7 @@ impl App {
             }]);
         }
 
-        list::save_shopping_list_config(self.shopping_list.clone());
+        lists::list::save_shopping_list_config(self.shopping_list.clone());
     }
 
     fn edit_ingredient(&mut self) {
@@ -606,7 +606,7 @@ impl App {
                         self.current_dish_list = None
                     }
                 }
-                list::save_shopping_list_config(self.shopping_list.clone());
+                lists::list::save_shopping_list_config(self.shopping_list.clone());
             }
 
             _ => {}
@@ -657,7 +657,7 @@ impl App {
                     }
                 }
 
-                list::save_shopping_list_config(self.shopping_list.clone());
+                lists::list::save_shopping_list_config(self.shopping_list.clone());
             }
 
             self.state = prev_state;
@@ -891,7 +891,7 @@ pub fn copy_to_clipboard(input: String) -> Result<(), String> {
     }
 }
 #[cfg(not(feature = "clipboard"))]
-pub fn copy_to_clipboard(input: String) -> Result<(), String> {
+pub fn copy_to_clipboard(_input: String) -> Result<(), String> {
     Err("clipboard not supported on this platform".to_string())
 }
 

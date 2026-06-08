@@ -1,36 +1,41 @@
-use crossterm::ExecutableCommand;
-use crossterm::terminal::{
-    EnterAlternateScreen, LeaveAlternateScreen, disable_raw_mode, enable_raw_mode,
-};
-
-use crossterm::event::{self, Event, KeyCode, KeyEvent, KeyModifiers};
-use ratatui::Terminal;
-use ratatui::layout::{Constraint, Direction, Layout, Margin};
-use ratatui::style::Color;
-use ratatui::style::Style;
-use ratatui::widgets::{Block, BorderType, Borders, Paragraph};
-
-use ratatui::prelude::CrosstermBackend;
-
-use std::error::Error;
-use std::io::stdout;
-
 use chrono::Utc;
+use clap::Parser;
+use crossterm::{
+    ExecutableCommand,
+    event::{self, Event, KeyCode, KeyEvent, KeyModifiers},
+    terminal::{EnterAlternateScreen, LeaveAlternateScreen, disable_raw_mode, enable_raw_mode},
+};
+use ratatui::{
+    Terminal,
+    layout::{Constraint, Direction, Layout, Margin},
+    prelude::CrosstermBackend,
+    style::{Color, Style},
+    widgets::{Block, BorderType, Borders, Paragraph},
+};
+use std::{error::Error, io::stdout};
 
-use crate::app::AppState;
-use crate::upload::UploadProgress;
-
+use crate::{app::AppState, lists::upload::UploadProgress};
 mod app;
-mod db;
-mod items;
-mod list;
-mod locale;
+mod dishtabase;
+mod lists;
+
+mod interface;
 mod render;
-mod ui;
-mod upload;
+
+#[derive(Parser)]
+struct Args {
+    #[arg(long)]
+    setup: bool,
+}
 
 fn main() -> Result<(), Box<dyn Error>> {
-    //set up
+    let args = Args::parse();
+    if args.setup {
+        //setup::run_setup();
+        return Ok(());
+    }
+
+    // Tui set up
     enable_raw_mode()?;
     std::io::stdout().execute(EnterAlternateScreen)?;
     let backend = CrosstermBackend::new(stdout());
@@ -39,7 +44,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     let mut app = app::App::init();
     let result = run(&mut terminal, &mut app);
 
-    //clean up
+    //Tui clean up
     disable_raw_mode()?;
     std::io::stdout().execute(LeaveAlternateScreen)?;
     result

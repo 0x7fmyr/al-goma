@@ -1,8 +1,8 @@
 use crate::{
     app::{App, AppState, Space},
-    db, items,
-    locale::UiText,
-    upload,
+    dishtabase,
+    interface::locale::UiText,
+    lists,
 };
 
 use chrono::Utc;
@@ -44,13 +44,13 @@ impl App {
     }
 
     pub fn open_view_edit_dishtabase(&mut self) {
-        db::load();
+        dishtabase::db::load();
         self.state = AppState::ViewingDatabase;
         self.selected_space = Space::MainRight;
     }
 
     pub fn open_upload(&mut self) {
-        match upload::does_token_exist() {
+        match lists::upload::does_token_exist() {
             Ok(true) => {
                 self.state = AppState::UploadMenu;
                 self.input = format!("Shopping List {}", Utc::now().date_naive());
@@ -220,15 +220,15 @@ impl App {
         }
     }
 
-    pub fn get_category_name(&self, c: items::Category) -> String {
+    pub fn get_category_name(&self, c: dishtabase::items::Category) -> String {
         match c {
-            items::Category::Dairy => self.text_get(UiText::Dairy),
-            items::Category::Pantry => self.text_get(UiText::Pantry),
-            items::Category::Spices => self.text_get(UiText::Spices),
-            items::Category::Vegetables => self.text_get(UiText::Vegetables),
-            items::Category::Fruit => self.text_get(UiText::Fruit),
-            items::Category::Protein => self.text_get(UiText::Protein),
-            items::Category::Misc => self.text_get(UiText::Misc),
+            dishtabase::items::Category::Dairy => self.text_get(UiText::Dairy),
+            dishtabase::items::Category::Pantry => self.text_get(UiText::Pantry),
+            dishtabase::items::Category::Spices => self.text_get(UiText::Spices),
+            dishtabase::items::Category::Vegetables => self.text_get(UiText::Vegetables),
+            dishtabase::items::Category::Fruit => self.text_get(UiText::Fruit),
+            dishtabase::items::Category::Protein => self.text_get(UiText::Protein),
+            dishtabase::items::Category::Misc => self.text_get(UiText::Misc),
         }
     }
 }

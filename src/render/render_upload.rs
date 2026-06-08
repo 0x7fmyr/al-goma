@@ -8,7 +8,7 @@ use ratatui::widgets::{Block, BorderType::Rounded, Borders, Clear, LineGauge, Pa
 use ratatui::{Frame, layout::Rect};
 
 use crate::app::{self, AppState};
-use crate::locale::UiText;
+use crate::interface::locale::UiText;
 use crate::render::pop;
 
 pub fn login_popup(window: &mut Frame, rect: Rect, msg: Vec<Line>) {

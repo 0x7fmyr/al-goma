@@ -10,8 +10,8 @@ use ratatui::{Frame, layout::Rect};
 
 use crate::AppState;
 use crate::app;
-use crate::items::Category;
-use crate::locale::UiText;
+use crate::dishtabase::items::Category;
+use crate::interface::locale::UiText;
 use crate::render::main_window;
 
 pub fn new_list(window: &mut Frame, rect: Rect, app: &mut app::App, size_h_w: (u16, u16)) {

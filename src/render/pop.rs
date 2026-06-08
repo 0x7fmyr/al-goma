@@ -7,7 +7,7 @@ use ratatui::widgets::{Block, BorderType::Rounded, Borders, Paragraph, Wrap};
 use ratatui::{Frame, layout::Rect};
 
 use crate::app::{self, AppState};
-use crate::locale::UiText;
+use crate::interface::locale::UiText;
 use crate::render::main_window;
 
 pub fn are_you_sure(

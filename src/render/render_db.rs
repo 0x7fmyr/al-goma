@@ -10,7 +10,7 @@ use ratatui::{Frame, layout::Rect};
 
 use super::pop;
 use crate::app::{self, AppState};
-use crate::locale::UiText;
+use crate::interface::locale::UiText;
 use crate::render::main_window;
 
 pub fn edit_widow(window: &mut Frame, rect: Rect, app: &mut app::App, size_h_w: (u16, u16)) {

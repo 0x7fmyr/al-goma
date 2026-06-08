@@ -8,11 +8,11 @@ use ratatui::{
     widgets::{Block, BorderType::Rounded, Borders, Paragraph},
 };
 
-use super::{render_db, pop, render_upload};
+use super::{pop, render_db, render_upload};
 
 use crate::{
     app::{self, AppState, Space},
-    locale::UiText,
+    interface::locale::UiText,
     render::{self, new_list},
 };
 

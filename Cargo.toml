@@ -13,11 +13,12 @@ toml = "0.8"
 chrono = "0.4"
 postcard = { version = "1", features = ["use-std"] }
 dirs = "5.0"
-tokio = { version = "1.52.1", features = ["full"]}
+tokio = { version = "1.52.1", features = ["full"] }
 yup-oauth2 = "12.1.2"
 reqwest = { version = "0.13.3", features = ["json"] }
 async-trait = "0.1.89"
 arboard = { version = "3.6.1", features = ["wayland-data-control"], optional = true }
+clap = { version = "4.6.1", features = ["derive"] }
 
 [features]
 clipboard = ["arboard"]

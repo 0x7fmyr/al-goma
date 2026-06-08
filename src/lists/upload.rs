@@ -6,7 +6,7 @@ use tokio::sync::mpsc::{Receiver, Sender};
 use yup_oauth2::{InstalledFlowAuthenticator, authenticator_delegate::InstalledFlowDelegate};
 
 use crate::app::{App, AppState};
-use crate::items::Ingredient;
+use crate::dishtabase::items::Ingredient;
 
 const CLIENT_SECRET: &str = include_str!("../oauth/clientsecret.json");
 

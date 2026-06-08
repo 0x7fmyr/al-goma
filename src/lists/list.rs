@@ -1,7 +1,7 @@
 use crate::{
     app::{App, AppState, Space},
-    items::{Database, Dish, Ingredient},
-    list,
+    dishtabase::items::{Database, Dish, Ingredient},
+    lists::list,
 };
 use {
     rand::Rng,
