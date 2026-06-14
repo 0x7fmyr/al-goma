@@ -145,6 +145,7 @@ impl App {
         App {
             current_dish_list: load_current_dish_list,
             shopping_list: load_shopping_list,
+
             text_options: (false, false),
             text,
             cursor: 0,
@@ -220,7 +221,7 @@ impl App {
     }
 
     fn clear_and_push_input_upload(&mut self, c: char) {
-        if self.default_upload_name == true {
+        if self.default_upload_name {
             self.default_upload_name = false;
             self.input.clear();
             self.input.push(c);
@@ -236,7 +237,7 @@ impl App {
             | AppState::NewList
             | AppState::UploadEnterCode
             | AppState::UploadMenu => {
-                if ctrl == false {
+                if !ctrl {
                     self.input.pop();
                 } else {
                     self.backspace_to_delimiter_or_whitespace()
@@ -247,7 +248,7 @@ impl App {
             | AppState::EditingIngredient
             | AppState::EditingAddIngredient
             | AppState::AddToShoppingList => {
-                if ctrl == false {
+                if !ctrl {
                     self.input.pop();
                     self.update_inline_complete_ingredients();
                 } else {
@@ -260,7 +261,7 @@ impl App {
     }
 
     fn backspace_to_delimiter_or_whitespace(&mut self) {
-        if let Some(c) = self.input.chars().rev().next() {
+        if let Some(c) = self.input.chars().next_back() {
             if c.is_whitespace() || c == '.' || c == '-' || c == '_' {
                 self.input.pop();
             } else {
@@ -777,6 +778,14 @@ impl App {
         let mut veg_been_done = false;
         let mut cs = 0;
         let mut selected_cat: Category;
+
+        // Dishes Header
+        self.current_dish_list.as_ref().into_iter().for_each(|x| {
+            x.iter()
+                .for_each(|dish| output.push_str(&format!("- {}\n", dish.name)))
+        });
+
+        output.push_str("\n");
 
         for (i, ing) in shopping_list.iter().enumerate() {
             let mut space = "                         ".to_string();

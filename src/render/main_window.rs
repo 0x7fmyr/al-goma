@@ -113,7 +113,7 @@ pub fn right(window: &mut Frame, rect: Rect, app: &mut app::App) {
         render::new_list::show_generated_list(window, rect, app, (20, 40));
 
         if matches!(app.state, AppState::AddToGeneratedList) {
-            pop::add_to_generated_list(window, rect, app, (14, 50)); //todo! add scrollbar
+            pop::add_to_generated_list(window, rect, app, (14, 50));
         }
     }
 
@@ -203,7 +203,7 @@ pub fn right(window: &mut Frame, rect: Rect, app: &mut app::App) {
                 Line::from(app.text_get(UiText::DeletingAys2)),
             ];
 
-            pop::are_you_sure(window, rect, app, msg, (50, 11));
+            pop::are_you_sure(window, rect, app, msg, (11, 50));
         }
     }
 

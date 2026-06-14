@@ -189,7 +189,7 @@ fn run(
                     Err(_) => {}
                 }
             }
-            // Polling progress_checker_receinver to know what to update the progressbar in upload
+            // Polling progress_checker_receiver to know what to update the progressbar in upload
             if let Some(progess_receiver) = &mut app.progress_checker_receiver
                 && let Ok(i) = progess_receiver.try_recv()
             {
@@ -228,7 +228,7 @@ fn run(
                     modifiers: KeyModifiers::CONTROL,
                     ..
                 } => {
-                    if app.state == AppState::ViewingDatabase {
+                    if matches!(app.state, AppState::ViewingDatabase | AppState::EditingDish) {
                         app.state = app::AppState::EditingDishName;
                         app.pending_dish = Some(app.db.dishes[app.db_cursor.cursor].to_owned());
                         app.input = app.pending_dish.as_ref().unwrap().name.clone();

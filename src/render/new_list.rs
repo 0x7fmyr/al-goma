@@ -248,6 +248,8 @@ pub fn show_generated_list(
 }
 
 pub fn show_generated_list_ingredients(window: &mut Frame, rect: Rect, app: &mut app::App) {
+    let saved_dishes = app.current_dish_list.clone().unwrap_or_default();
+
     let list_window = Layout::default()
         .direction(Direction::Vertical)
         .constraints([Constraint::Length(2), Constraint::Fill(1)])
@@ -256,7 +258,7 @@ pub fn show_generated_list_ingredients(window: &mut Frame, rect: Rect, app: &mut
             vertical: 1,
         }));
 
-    app.db_cursor.visable_lines = list_window[1].height as usize;
+    app.db_cursor.visable_lines = list_window[1].height as usize - (saved_dishes.len() + 1);
 
     window.render_widget(
         Paragraph::new(
@@ -267,6 +269,26 @@ pub fn show_generated_list_ingredients(window: &mut Frame, rect: Rect, app: &mut
         .alignment(Alignment::Center),
         list_window[0],
     );
+
+    //Dishes Header
+
+    let mut dish_lines: Vec<Line> = Vec::new();
+
+    for dishes in saved_dishes {
+        let dish_spans = vec![
+            Span::styled(
+                "- ",
+                Style::new().fg(Color::Blue).add_modifier(Modifier::BOLD),
+            ),
+            Span::raw(dishes.name.clone()).add_modifier(Modifier::BOLD),
+        ];
+
+        dish_lines.push(Line::from(dish_spans));
+    }
+
+    dish_lines.push(Line::from("\n"));
+
+    // Ingredients List
 
     let mut spans: Vec<Span> = Vec::new();
     let mut ingredients: Vec<Line> = Vec::new();
@@ -397,6 +419,10 @@ pub fn show_generated_list_ingredients(window: &mut Frame, rect: Rect, app: &mut
         spans.clear();
     }
 
+    let mut list_content: Vec<Line> = Vec::new();
+    list_content.append(&mut dish_lines);
+    list_content.append(&mut ingredients);
+
     let scrollbar = Scrollbar::new(ScrollbarOrientation::VerticalRight)
         .begin_symbol(Some("•"))
         .end_symbol(Some("•"));
@@ -408,11 +434,12 @@ pub fn show_generated_list_ingredients(window: &mut Frame, rect: Rect, app: &mut
             .position(vertical_scroll);
 
     window.render_widget(
-        Paragraph::new(ingredients)
+        Paragraph::new(list_content)
             .scroll((vertical_scroll as u16, 0))
             .alignment(Alignment::Left),
         list_window[1],
     );
+
     if app.shopping_list.len() > app.db_cursor.visable_lines {
         window.render_stateful_widget(
             scrollbar,

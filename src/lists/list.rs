@@ -87,7 +87,7 @@ impl App {
             i += 1
         }
 
-        self.current_dish_list.replace(found_dishes);
+        self.current_dish_list.replace(found_dishes.clone());
         self.input.clear();
     }
 

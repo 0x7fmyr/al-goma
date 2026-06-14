@@ -2,8 +2,8 @@ use ratatui::layout::{Alignment, Constraint, Layout, Margin};
 use ratatui::prelude::Direction;
 use ratatui::style::{Color, Modifier, Style, Stylize};
 use ratatui::text::{Line, Span};
-use ratatui::widgets::Clear;
 use ratatui::widgets::{Block, BorderType::Rounded, Borders, Paragraph, Wrap};
+use ratatui::widgets::{Clear, Scrollbar, ScrollbarState};
 use ratatui::{Frame, layout::Rect};
 
 use crate::app::{self, AppState};
@@ -160,6 +160,7 @@ pub fn add_to_generated_list(
     size_h_w: (u16, u16),
 ) {
     let center_rect = main_window::center_rect(rect, size_h_w.0, size_h_w.1);
+    let vertical_scroll = app.db_cursor.scroll;
 
     let popup = Layout::default()
         .constraints([Constraint::Fill(1)])
@@ -175,6 +176,8 @@ pub fn add_to_generated_list(
     let mut db: Vec<Line> = Vec::new();
     let mut name: Vec<Span> = Vec::new();
     let mut name_num: usize;
+
+    app.db_cursor.visable_lines = inner_window[0].height as usize - 2;
 
     for (i, d) in app.db.dishes.iter().enumerate() {
         name_num = i + 1;
@@ -218,6 +221,13 @@ pub fn add_to_generated_list(
 
     window.render_widget(Clear, center_rect);
 
+    // Scrollbar
+    let scrollbar = Scrollbar::new(ratatui::widgets::ScrollbarOrientation::VerticalRight)
+        .begin_symbol(Some("•"))
+        .end_symbol(Some("•"));
+
+    let mut scrollbar_state = ScrollbarState::new(app.db.dishes.len()).position(vertical_scroll);
+
     window.render_widget(
         Paragraph::default().block(
             Block::bordered()
@@ -230,12 +240,23 @@ pub fn add_to_generated_list(
     );
 
     window.render_widget(
-        Paragraph::new(db).block(
-            Block::bordered()
-                .border_type(Rounded)
-                .border_style(Style::new().fg(Color::DarkGray).dim()),
-        ),
+        Paragraph::new(db)
+            .scroll((vertical_scroll as u16, 0))
+            .block(
+                Block::bordered()
+                    .border_type(Rounded)
+                    .border_style(Style::new().fg(Color::DarkGray).dim()),
+            ),
         inner_window[0],
+    );
+
+    window.render_stateful_widget(
+        scrollbar,
+        inner_window[0].inner(Margin {
+            horizontal: 0,
+            vertical: 1,
+        }),
+        &mut scrollbar_state,
     );
 }
 
@@ -342,9 +363,9 @@ pub fn input_box(window: &mut Frame, rect: Rect, app: &mut app::App, title_msg: 
     let h = Layout::default()
         .direction(Direction::Horizontal)
         .constraints([
-            Constraint::Length(10),
+            Constraint::Length(2),
             Constraint::Fill(1),
-            Constraint::Length(10),
+            Constraint::Length(2),
         ])
         .split(v[1]);
 
@@ -359,8 +380,8 @@ pub fn input_box(window: &mut Frame, rect: Rect, app: &mut app::App, title_msg: 
     if let Some(inline_autocomplete) = app.inline_complete.clone() {
         inline = inline_autocomplete.clone();
 
-        let first_letter = if inline_autocomplete.len() > 0 {
-            inline.chars().nth(0).unwrap().to_string()
+        let first_letter = if !inline_autocomplete.is_empty() {
+            inline.chars().next().unwrap().to_string()
         } else {
             String::new()
         };
@@ -372,7 +393,7 @@ pub fn input_box(window: &mut Frame, rect: Rect, app: &mut app::App, title_msg: 
                 .add_modifier(Modifier::SLOW_BLINK | Modifier::UNDERLINED),
         );
 
-        if inline.len() > 0 {
+        if !inline.is_empty() {
             inline.remove(0).to_string();
         }
     }

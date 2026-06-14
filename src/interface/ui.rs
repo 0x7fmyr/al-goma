@@ -132,6 +132,8 @@ impl App {
                     if self.db_cursor.cursor < self.db.dishes.len() - 1 {
                         self.db_cursor.cursor += 1
                     }
+
+                    update_scroll(&mut self.db_cursor);
                 }
                 AppState::EditingDish => {
                     if self.db.dishes[self.db_cursor.cursor].ingredients.is_empty() {
